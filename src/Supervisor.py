@@ -1,11 +1,12 @@
+from Agent import *
 class BaseSupervisor():
 
     def __init__(self,N):
-        self.population=self.init_population(self.numagents)
         # parameters
         self.numagents=N
+        self.population=self.__init_population(self.numagents)
 
-    def __init_population(N):
+    def __init_population(self,N):
         """
         Creates the objects
 
@@ -18,9 +19,9 @@ class BaseSupervisor():
         measurements=self.__measurement_gen(0)
         pop=[]
         for i in range(N):
-            a=BaseAgent()       # give it the measurement
+            a=BaseAgent(0)       # give it the measurement
             pop.append(a)
-        raise NotImplementedError("Please Implement this method")
+        #raise NotImplementedError("Please Implement this method")
         return pop
 
     def __measurement_gen(self,timestep):
@@ -30,7 +31,8 @@ class BaseSupervisor():
         Args:
         timestep: the index of the current round
         """
-        raise NotImplementedError("Please Implement this method")
+        #raise NotImplementedError("Please Implement this method")
+        return [0]*self.numagents
 
     def decisionFct(self,perceptions):
         """
@@ -96,7 +98,7 @@ class BaseSupervisor():
         """
         t=0
         while(t<T):
-            t++
+            t+=1
         raise NotImplementedError("Please Implement this method")
 
     def evaluate(self,decisions,timestep):

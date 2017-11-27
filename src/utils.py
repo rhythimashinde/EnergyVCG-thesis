@@ -9,6 +9,7 @@ def gini(array):
     http://www.statsdirect.com/help/default.htm#nonparametric_methods/gini.htm
     """
     # All values are treated equally, arrays must be 1d:
+    array=np.array(array,dtype=np.float64)
     array = array.flatten()
     if np.amin(array) < 0:
         # Values cannot be negative:
@@ -113,3 +114,7 @@ def contributions(decisions):
     """
     assert(all(np.logical_or(np.array(decisions)==1,np.array(decisions)==0))) # either 0 or 1
     return np.mean(decisions)
+
+def tot_contributions(decisions):
+    assert(all(np.logical_or(np.array(decisions)==1,np.array(decisions)==0))) # either 0 or 1
+    return np.sum(decisions)
