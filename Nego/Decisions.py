@@ -7,11 +7,11 @@ class DecisionLogic():
         self.partner_selected = None
 
     def chose_action(self):
-        # here add some relation to make choice based on partner selected
-            # for i in range(model.num_agents):
-            #    self.partner_selected = NegoAgent.partner_selection(i)
-            # if other.production > self.consumption:
-            #     self.choice = 1  # "buy"
-            # if self.production > other.consumption:
-            #     self.choice = 2  # "sell"
+        # agents = NegoAgent.model.schedule.agents
+        # for i in agents:
+        #     j = i.partner
+        #     if j.energy < i.energy:
+        #         i.action = 1
+        #     else:
+        #         i.action = 0
         return random.choice([1, 0])  # buy or sell
