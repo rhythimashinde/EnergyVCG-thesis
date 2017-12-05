@@ -1,9 +1,9 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
-from Mesurements import MeasurementGen
-from Decisions import DecisionLogic
+from src.utils import *
+from Nego.MesurementGen import MeasurementGen
+from Nego.Decisions import DecisionLogic
 import random
-import utils
 
 class NegoAgent(Agent):
     def __init__(self,unique_id,model,measurements,decisions):
@@ -103,10 +103,10 @@ class NegoModel(Model):
         self.schedule.step(self,decisions,timestep)
 
     def evaluate(self,decisions,timestep):
-        all_reward = dict(gini=utils.gini(decisions),
-                          efficiency=utils.efficiency(self.num_agents,utils.tot_contributions(decisions)),
-                          success=utils.success(self.num_agents,utils.tot_contributions(decisions)),
-                          tot_contrib = utils.tot_contributions(decisions))
+        all_reward = dict(gini=gini(decisions),
+                          efficiency=efficiency(self.num_agents,tot_contributions(decisions)),
+                          success=success(self.num_agents,tot_contributions(decisions)),
+                          tot_contrib = tot_contributions(decisions))
         return all_reward
 
     def feedback(self):
