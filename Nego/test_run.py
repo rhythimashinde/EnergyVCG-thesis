@@ -1,4 +1,4 @@
-from Agents_Supervisor import NegoModel
+from Agents_Supervisor_bilateral import NegoModel
 import unittest
 
 class TestMeasures(unittest.TestCase):
