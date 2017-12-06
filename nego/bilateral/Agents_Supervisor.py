@@ -11,17 +11,17 @@ class NegoModel(Model):
         super().__init__(N)
         self.num_agents = N
         self.schedule = RandomActivation(self)
-        m = self.perception()
-        decisions = self.chose_action()
+        measurements = self.perception()
+        decisions = self.decision_fct()
         rewards = self.feedback()
-        self.create_agents(m,decisions,rewards)
+        self.create_agents(measurements,decisions,rewards)
         self.evaluate(decisions,self.schedule.time)
 
     def perception(self):
         measurements_new=[MeasurementGen.get_measurements(i) for i in range(self.num_agents)]
         return measurements_new
 
-    def chose_action(self):
+    def decision_fct(self):
         all_actions=[DecisionLogic.chose_action(i) for i in range(self.num_agents)]
         return all_actions
 
@@ -50,7 +50,7 @@ class NegoModel(Model):
     def log(self):
         model = NegoModel(self.num_agents)
         m=model.perception()
-        decisions = model.chose_action()
+        decisions = model.decision_fct()
         rewards = model.feedback()
         agents=model.init_agents(m,decisions,rewards)
         partner = [a.partner for a in agents]
@@ -75,8 +75,7 @@ class NegoAgent(Agent):
         self.state = self.update_state(rewards)
 
     def step(self, model,decisions,rewards,timestep):
-        self.decision_fct(decisions)
-        self.feedback(rewards)  # this would not be called again separately here
+        pass
 
     def seller_buyer(self):
         if self.production > self.consumption:
@@ -126,11 +125,11 @@ class NegoAgent(Agent):
         if j.production >= self.consumption:
             self.action = 0  # buy
 
-    def decision_fct(self, decision):
-        self.action = DecisionLogic.chose_action(decision)
+    def decision_fct(self):
+        return 1
 
-    def feedback(self, rewards):
-        self.reward = NegoModel.feedback(rewards)
+    def feedback(self):
+        return 1
 
     def update_state(self,rewards):
         self.state = rewards+1
