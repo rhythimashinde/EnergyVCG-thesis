@@ -1,4 +1,4 @@
-from Agents_Supervisor import NegoModel
+from nego.bilateral.Agents_Supervisor import NegoModel
 import unittest
 
 class TestMeasures(unittest.TestCase):
@@ -11,16 +11,6 @@ class TestMeasures(unittest.TestCase):
         self.N=5
         self.s=NegoModel(self.N)
         self.s.threshold=3
-
-    def test_basic(self):
-        model = NegoModel(3)
-        m=model.perception()
-        decisions = model.chose_action()
-        agents=model.init_agents(m,decisions)
-        measures = [[a.production,a.consumption,a.tariff] for a in agents]
-        self.assertEqual(m, measures)
-        measures_new = [a.action for a in agents]
-        self.assertEqual(decisions,measures_new)
 
     def test_uniform(self):
         measures = self.s.evaluate([1,1,1,1,1],0)
@@ -35,5 +25,6 @@ class TestMeasures(unittest.TestCase):
         self.assertEqual(measures["efficiency"],0)
         self.assertEqual(round(measures["success"],2),0.6)
         self.assertEqual(measures["tot_contrib"],3)
+
 
 

@@ -28,11 +28,9 @@ def gini(array):
 def success(thresh,tot_contrib):
     """
     Returns the value of success for one round
-
     Args:
     thresh: the needs
     tot_contrib: the sum of contributions
-
     Returns: either 1 if successful or a fraction corresponding to the needs covered
     """
     assert(thresh>0)
@@ -41,10 +39,8 @@ def success(thresh,tot_contrib):
 def success_freq(successes):
     """
     Returns the frequency of successes over time
-
     Args:
     successes: a list of success values
-
     Returns:
     A float representing the frequence of success
     """
@@ -55,11 +51,9 @@ def efficiency(thresh,tot_contrib):
     """
     Returns the value of efficiency for one round.
     Similar values of needs and total contributions correspond to high efficiency
-
     Args:
     thresh: the needs
     tot_contrib: the sum of contributions
-
     Returns: either the ratio between needs and contributions if successful or 0
     """
     return (thresh/tot_contrib) if tot_contrib>=thresh else 0
@@ -67,10 +61,8 @@ def efficiency(thresh,tot_contrib):
 def efficiency_mean(efficiencies):
     """
     Returns the mean efficiency over time
-
     Args:
     efficiencies: a list of efficiency values
-
     Returns:
     A float representing the mean efficiency (among all successful rounds) or 0 if there were no successful rounds
     """
@@ -81,10 +73,8 @@ def efficiency_mean(efficiencies):
 def cost(costs):
     """
     Computes the average cost for the current round
-
     Args:
     costs: a list of costs, one for each agent
-
     Returns: the average cost
     """
     return np.mean(costs)
@@ -92,11 +82,9 @@ def cost(costs):
 def social_welfare(costs,rewards):
     """
     Computes the social welfare for the current round
-
     Args:
     costs: a list of costs, one for each agent
     rewards: a list of rewards, one for each agent
-
     Returns: the social welfare
     """
     assert(len(costs)==len(rewards))
@@ -105,10 +93,8 @@ def social_welfare(costs,rewards):
 def contributions(decisions):
     """
     Computes the ratio of volunteering and free riding
-
     Args:
     decisions: the actions of agents, 1 for volunteers, 0 for free riders
-
     Returns:
     The proportion of volunteers
     """
