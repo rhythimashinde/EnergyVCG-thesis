@@ -15,7 +15,6 @@ class NegoAgent(Agent):
         self.consumption = measurements[1]
         self.tariff = measurements[2]
         self.type = self.seller_buyer()
-        self.energy = self.production
         self.partner = self.partner_selection()
 
     def step(self, model,decisions,timestep):
@@ -36,35 +35,29 @@ class NegoAgent(Agent):
                 if self.type == "buyer" and a.type == "seller" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.consumption <= a.production:
-                        a.energy = a.production-self.consumption
-                        a.production = a.energy
-                        self.energy = 0
+                        a.production = a.production-self.consumption
+                        self.consumption = 0
                         # allocate this remaining energy as surplus in second round
                     else:
-                        self.energy = self.consumption-a.production
-                        self.consumption = self.energy
-                        a.energy = 0
+                        self.consumption = self.consumption-a.production
+                        a.production = 0
                     return self.partner
                 elif self.type == "seller" and a.type == "buyer" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.production <= a.consumption:
-                        a.energy = a.consumption - self.production
-                        a.consumption = a.energy
-                        self.energy = 0
+                        a.consumption = a.consumption - self.production
+                        self.production = 0
                     else:
-                        self.energy = self.production - a.consumption
-                        self.production = self.energy
-                        a.energy = 0
+                        self.production = self.production - a.consumption
+                        a.consumption = 0
                     return self.partner
 
     def chose_action(self):
-        agents = self.model.schedule.agents
-        for i in agents:
-            j = i.partner
-            if j.energy < i.energy:
-                i.action = 1
-            else:
-                i.action = 0
+        j = self.partner
+        if j.consumption <= self.production:
+            self.action = 1  # sell
+        if j.production >= self.consumption:
+            self.action = 0  # buy
 
     def decision_fct(self, decision):
         self.action = DecisionLogic.chose_action(decision)

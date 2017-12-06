@@ -12,16 +12,6 @@ class TestMeasures(unittest.TestCase):
         self.s=NegoModel(self.N)
         self.s.threshold=3
 
-    def test_basic(self):
-        model = NegoModel(3)
-        m=model.perception()
-        decisions = model.chose_action()
-        agents=model.init_agents(m,decisions)
-        measures = [[a.production,a.consumption,a.tariff] for a in agents]
-        self.assertEqual(m, measures)
-        measures_new = [a.action for a in agents]
-        self.assertEqual(decisions,measures_new)
-
     def test_uniform(self):
         measures = self.s.evaluate([1,1,1,1,1],0)
         self.assertEqual(round(measures["gini"],2),0)

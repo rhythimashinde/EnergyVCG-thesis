@@ -26,25 +26,15 @@ measures_rich = s.evaluate([1,1,1,1,1],0)
 
 x = ["1_poor","2_uniform","3_rich"]
 
-y_poor = round(measures_poor["gini"],2)
-y_uniform = round(measures_uniform["gini"],2)
-y_rich = round(measures_rich["gini"],2)
-y_gini = [y_poor,y_uniform,y_rich]
+y_gini = [measures_poor["gini"],measures_uniform["gini"],measures_rich["gini"]]
 plt.plot(x,y_gini,label="gini")
 
-y_poor_success = round(measures_poor["success"],2)
-y_uniform_success = round(measures_uniform["success"],2)
-y_rich_success = round(measures_rich["success"],2)
-y_success = [y_poor_success, y_uniform_success,y_rich_success]
+y_success = [measures_poor["success"],measures_uniform["success"],measures_rich["success"]]
 plt.plot(x,y_success,label="success")
 
-y_poor_efficiency = measures_poor["efficiency"]
-y_uniform_efficiency = measures_uniform["efficiency"]
-y_rich_efficiency = measures_rich["efficiency"]
-y_efficiency = [y_poor_efficiency, y_uniform_efficiency,y_rich_efficiency]
+y_efficiency = [measures_poor["efficiency"], measures_uniform["efficiency"], measures_rich["efficiency"]]
 plt.plot(x,y_efficiency,label="efficiency")
 
-plt.legend(bbox_to_anchor=(1, 1),
-           bbox_transform=plt.gcf().transFigure)
+plt.legend(bbox_to_anchor=(1, 1), bbox_transform=plt.gcf().transFigure)
 plt.show()
 
