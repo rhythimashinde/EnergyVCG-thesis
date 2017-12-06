@@ -1,23 +1,21 @@
 from nego.bilateral.Agents_Supervisor import NegoModel
 import matplotlib.pyplot as plt
 
+#### BASIC PLOTS #####
 model = NegoModel(100)
-m=model.perception()
-decisions = model.chose_action()
-agents=model.init_agents(m,decisions)
-measures = [[a.production,a.consumption,a.tariff,a.energy,a.type,a.partner,a.reward] for a in agents]
-print(measures)
-
-x = [a.unique_id for a in model.schedule.agents]
-y = [a.energy for a in model.schedule.agents]
-label = [a.type for a in model.schedule.agents]
+y= model.log()['production']
+x= model.log()['id']
+label = model.log()['type']
 colors = ['red' if l == "buyer" else 'green' for l in label]
 plt.scatter(x,y,color=colors)
-plt.legend(bbox_to_anchor=(1, 1),
-           bbox_transform=plt.gcf().transFigure)
-
+plt.legend(bbox_to_anchor=(1, 1), bbox_transform=plt.gcf().transFigure)
 plt.show()
 
+
+### PRINT LOG ###
+print(model.log())
+
+### TEST THE EVALUATION ###
 s=NegoModel(5)
 s.threshold=3
 measures_poor = s.evaluate([1,0,0,0,0],0)
