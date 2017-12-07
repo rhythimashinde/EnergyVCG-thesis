@@ -1,6 +1,5 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
-import pandas as pd
 from src.utils import *
 from nego.bilateral.MesurementGen import MeasurementGen
 from nego.bilateral.Decisions import DecisionLogic
@@ -22,7 +21,7 @@ class NegoModel(Model):
         return measurements_new
 
     def decision_fct(self):
-        all_actions=[DecisionLogic.chose_action(i) for i in range(self.num_agents)]
+        all_actions=[NegoAgent.decision_fct(i) for i in range(self.num_agents)]
         return all_actions
 
     def create_agents(self,measurements_now,decisions,rewards):
@@ -34,8 +33,8 @@ class NegoModel(Model):
         ret=[NegoAgent(i, self, m,d,r) for i,m,d,r in zip(range(self.num_agents),measurements_now,decisions,rewards)]
         return ret
 
-    def step(self,decisions,timestep):
-        self.schedule.step(self,decisions,timestep)
+    def step(self,decisions,rewards,timestep):
+        self.schedule.step(self,decisions,rewards,timestep)
 
     def evaluate(self,decisions,timestep):
          return dict(gini=gini(decisions),
@@ -46,19 +45,6 @@ class NegoModel(Model):
     def feedback(self):
         rewards = [feedback.feedbackGen(i) for i in range(self.num_agents)]
         return rewards
-
-    def log(self):
-        model = NegoModel(self.num_agents)
-        m=model.perception()
-        decisions = model.decision_fct()
-        rewards = model.feedback()
-        agents=model.init_agents(m,decisions,rewards)
-        partner = [a.partner for a in agents]
-        partner_id = [a.unique_id for a in partner]
-        d = [[a.unique_id,a.production,a.consumption,a.tariff,a.type,a.reward,a.state] for a in agents]
-        agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward','state'])
-        agents_dataframe_new = agents_dataframe.assign(partner_id = partner_id)
-        return agents_dataframe_new
 
 class NegoAgent(Agent):
     def __init__(self,unique_id,model,measurements,decisions,rewards):
@@ -75,7 +61,7 @@ class NegoAgent(Agent):
         self.state = self.update_state(rewards)
 
     def step(self, model,decisions,rewards,timestep):
-        pass
+        self.update_state(rewards)
 
     def seller_buyer(self):
         if self.production > self.consumption:
@@ -84,14 +70,9 @@ class NegoAgent(Agent):
             self.type = "buyer"
         return self.type
 
-    def read_file(self):
-        import xml.etree.ElementTree as ET
-        tree = ET.parse('test.xml')
-        root = tree.getroot()
-
     def partner_selection(self):
         other = self.model.schedule.agents
-        self.read_file()  # for Genius interface
+        # self.read_file()
         for a in other:
             if a != self:  # making sure that the agent doesn't select itself
                 if self.type == "buyer" and a.type == "seller" and self.tariff<=a.tariff: # modify tariff rule
@@ -118,15 +99,13 @@ class NegoAgent(Agent):
         if self.type == "seller":
             return 1  # modify this cost with every transaction
 
-    def chose_action(self):
-        j = self.partner
-        if j.consumption <= self.production:
-            self.action = 1  # sell
-        if j.production >= self.consumption:
-            self.action = 0  # buy
-
     def decision_fct(self):
-        return 1
+        # j = self.partner
+        # if j.consumption <= self.production:
+        #     self.action = 1  # sell
+        # if j.production >= self.consumption:
+        #     self.action = 0  # buy
+        return DecisionLogic.chose_action(self)
 
     def feedback(self):
         return 1

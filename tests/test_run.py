@@ -25,6 +25,3 @@ class TestMeasures(unittest.TestCase):
         self.assertEqual(measures["efficiency"],0)
         self.assertEqual(round(measures["success"],2),0.6)
         self.assertEqual(measures["tot_contrib"],3)
-
-
-
