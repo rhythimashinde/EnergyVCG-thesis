@@ -15,7 +15,7 @@ partner_id = [a.unique_id for a in partner]
 d = [[a.unique_id,a.production,a.consumption,a.tariff,a.type,a.reward,a.state,a.action] for a in agents]
 agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward','state','action'])
 agents_dataframe_new = agents_dataframe.assign(partner_id = partner_id)
-agents_dataframe_new.to_csv('out_log.csv',sep=",")
+#agents_dataframe_new.to_csv('out_log.csv',sep=",")
 
 #### PLOT ####
 with open('out_log.csv', newline='') as csvfile:

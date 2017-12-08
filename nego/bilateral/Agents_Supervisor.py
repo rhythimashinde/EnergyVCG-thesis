@@ -34,6 +34,7 @@ class NegoModel(Model):
         return ret
 
     def step(self,decisions,rewards,timestep):
+        self.feedback()
         self.schedule.step(self,decisions,rewards,timestep)
 
     def evaluate(self,decisions,timestep):
