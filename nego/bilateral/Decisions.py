@@ -1,6 +1,7 @@
 import random
 
-class DecisionLogic():
+class DecisionLogic(object):
+    @staticmethod
     def __init__(self):
         super().__init__()
         self.choice = 0
