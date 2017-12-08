@@ -46,6 +46,10 @@ class TestMeasures(unittest.TestCase):
         vals=np.array([[0]*5,[0]*5])
         self.assertEqual(round(gini(vals),2),0.0)
 
+    def test_gini_zero(self):
+        vals=np.array([])
+        self.assertEqual(round(gini(vals),2),-1)
+
     # def test_all_equal_full_contrib(self):
     #     # costs and values are all 1
     #     pdict=[{"value":1,"cost":1}]*self.N

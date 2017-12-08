@@ -11,6 +11,8 @@ def gini(array):
     # All values are treated equally, arrays must be 1d:
     array=np.array(array,dtype=np.float64)
     array = array.flatten()
+    if len(array)==0:
+        return -1
     if np.amin(array) < 0:
         # Values cannot be negative:
         array -= np.amin(array)
@@ -33,7 +35,7 @@ def success(thresh,tot_contrib):
     tot_contrib: the sum of contributions
     Returns: either 1 if successful or a fraction corresponding to the needs covered
     """
-    assert(thresh>0)
+    assert(thresh>=0)
     return (tot_contrib/thresh) if thresh>tot_contrib else 1
 
 def success_freq(successes):

@@ -14,8 +14,8 @@ class NegoAgent(Agent):
         self.production = measurements[0]
         self.consumption = measurements[1]
         self.tariff = measurements[2]
-        self.type = self.seller_buyer()
-        self.partner = self.partner_selection()
+        self.seller_buyer()
+        #self.partner = self.partner_selection()
 
     def step(self, model,decisions,timestep):
         self.decision_fct(self.model.chose_action(model))
@@ -23,16 +23,15 @@ class NegoAgent(Agent):
 
     def seller_buyer(self):
         if self.production > self.consumption:
-            self.type = "seller"
+            self.t = "seller"
         if self.production < self.consumption:
-            self.type = "buyer"
-        return self.type
+            self.t = "buyer"
 
     def partner_selection(self):
         other = self.model.schedule.agents
         for a in other:
             if a != self:
-                if self.type == "buyer" and a.type == "seller" and self.tariff<=a.tariff: # modify tariff rule
+                if self.t == "buyer" and a.type == "seller" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.consumption <= a.production:
                         a.production = a.production-self.consumption
@@ -42,7 +41,7 @@ class NegoAgent(Agent):
                         self.consumption = self.consumption-a.production
                         a.production = 0
                     return self.partner
-                elif self.type == "seller" and a.type == "buyer" and self.tariff<=a.tariff: # modify tariff rule
+                elif self.t == "seller" and a.type == "buyer" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.production <= a.consumption:
                         a.consumption = a.consumption - self.production
@@ -100,6 +99,7 @@ class NegoModel(Model):
         self.schedule.step(self,decisions,timestep)
 
     def evaluate(self,decisions,timestep):
+        # Stefano: I am not sure that these measures (as defined) are suitable for the energy scenario... we should discuss about this
         all_reward = dict(gini=gini(decisions),
                           efficiency=efficiency(self.num_agents,tot_contributions(decisions)),
                           success=success(self.num_agents,tot_contributions(decisions)),
