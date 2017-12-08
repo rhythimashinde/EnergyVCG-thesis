@@ -92,6 +92,13 @@ class NegoModel(Model):
             self.schedule.add(a)
 
     def init_agents(self,measurements_now,decisions):
+        # produce default values if lengths mismatch
+        if(len(measurements_now)<self.num_agents):
+            default_vals=[0]*len(measurements_now[0])
+            measurements_now=measurements_now+[default_vals]*(self.num_agents-len(measurements_now))
+        if(len(decisions)<self.num_agents):
+            default_vals=0
+            decisions=decisions+[default_vals]*(self.num_agents-len(decisions))
         ret=[NegoAgent(i, self, m,d) for i,m,d in zip(range(self.num_agents),measurements_now,decisions)]
         return ret
 
