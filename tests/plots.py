@@ -1,4 +1,4 @@
-from nego.bilateral.Agents_Supervisor import NegoModel
+from Nego.bilateral.Agents_Supervisor import NegoModel
 import matplotlib.pyplot as plt
 
 model = NegoModel(100)

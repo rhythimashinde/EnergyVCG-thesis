@@ -6,7 +6,7 @@ class DecisionLogic():
         self.choice = 0
         self.partner_selected = None
 
-    def chose_action(self):
+    def chose_action(self,i):
         # agents = NegoAgent.model.schedule.agents
         # for i in agents:
         #     j = i.partner
