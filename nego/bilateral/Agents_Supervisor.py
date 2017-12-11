@@ -43,6 +43,7 @@ class NegoModel(Model):
         return ret
 
     def step(self,decisions,rewards,timestep):
+        # TODO call the log fct, update perceptions, rewards
         self.feedback()
         self.schedule.step(self,decisions,rewards,timestep)
 
@@ -73,6 +74,7 @@ class NegoAgent(Agent):
         self.state = self.update_state(rewards)
 
     def step(self, model,decisions,rewards,timestep):
+        # TODO update decisions of agents
         self.update_state(rewards)
 
     def seller_buyer(self):
@@ -111,6 +113,7 @@ class NegoAgent(Agent):
             return 1  # modify this cost with every transaction
 
     def decision_fct(self, decision):
+        # TODO this function is never called
         d=DecisionLogic()
         self.action = d.chose_action(decision)
 

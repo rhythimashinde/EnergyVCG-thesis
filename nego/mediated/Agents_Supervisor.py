@@ -23,6 +23,7 @@ class NegoModel(Model):
         return measurements_new
 
     def decision_fct(self):
+        # TODO the mediator should choose the actions, not the agents
         d=DecisionLogic()
         all_actions=[d.chose_action(i) for i in range(self.num_agents)]
         return all_actions
@@ -44,10 +45,10 @@ class NegoModel(Model):
         return ret
 
     def step(self,decisions,rewards,timestep):
+        # TODO call the log fct, update perceptions, <rewards
         self.schedule.step(self,decisions,rewards,timestep)
 
     def evaluate(self,decisions,timestep):
-        # Stefano: I am not sure that these measures (as defined) are suitable for the energy scenario... we should discuss about this
          return dict(gini=gini(decisions),
                           efficiency=efficiency(self.num_agents,tot_contributions(decisions)),
                           success=success(self.num_agents,tot_contributions(decisions)),
@@ -85,6 +86,7 @@ class NegoAgent(Agent):
         self.state = self.update_state(rewards)
 
     def step(self, model,decisions,rewards,timestep):
+        # TODO update the state of agents
         pass
 
     def seller_buyer(self):
@@ -130,6 +132,7 @@ class NegoAgent(Agent):
             self.action = 0  # buy
 
     def decision_fct(self):
+        # TODO this function is never called
         return 1
 
     def feedback(self):
