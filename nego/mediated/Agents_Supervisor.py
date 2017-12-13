@@ -2,9 +2,9 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 import pandas as pd
 from src.utils import *
-from Nego.mediated.MeasurementGen import MeasurementGen
-from Nego.mediated.Decisions import DecisionLogic
-from Nego.bilateral.Feedback_calculation import feedback
+from nego.mediated.MeasurementGen import MeasurementGen
+from nego.mediated.Decisions import DecisionLogic
+from nego.bilateral.Feedback_calculation import feedback
 
 class NegoModel(Model):
     def __init__(self, N):
@@ -14,7 +14,6 @@ class NegoModel(Model):
         measurements = self.perception()
         decisions = self.decision_fct()
         rewards = self.feedback()
-        self.create_agents(measurements,decisions,rewards)
         self.evaluate(decisions,self.schedule.time)
 
     def perception(self):
@@ -23,7 +22,7 @@ class NegoModel(Model):
         return measurements_new
 
     def decision_fct(self):
-        # TODO the mediator should choose the actions, not the agents
+        # the mediator should choose the actions, not the agents: the mediator here is the decision logic class
         d=DecisionLogic()
         all_actions=[d.chose_action(i) for i in range(self.num_agents)]
         return all_actions
@@ -44,9 +43,10 @@ class NegoModel(Model):
         ret=[NegoAgent(i, self, m,d,r) for i,m,d,r in zip(range(self.num_agents),measurements_now,decisions,rewards)]
         return ret
 
-    def step(self,decisions,rewards,timestep):
-        # TODO call the log fct, update perceptions, <rewards
-        self.schedule.step(self,decisions,rewards,timestep)
+    def step(self,decisions,rewards,perceptions,timestep):
+        # call the log fct, update perceptions, <rewards
+        # self.log(timestep)
+        self.schedule.step(self,decisions,rewards,perceptions,timestep)
 
     def evaluate(self,decisions,timestep):
          return dict(gini=gini(decisions),
@@ -59,17 +59,10 @@ class NegoModel(Model):
         return rewards
 
     def log(self):
-        model = NegoModel(self.num_agents)
-        m=model.perception()
-        decisions = model.decision_fct()
-        rewards = model.feedback()
-        agents=model.init_agents(m,decisions,rewards)
-        partner = [a.partner for a in agents]
-        partner_id = [a.unique_id for a in partner]
-        d = [[a.unique_id,a.production,a.consumption,a.tariff,a.t,a.reward,a.state] for a in agents]
-        agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward','state'])
-        agents_dataframe_new = agents_dataframe.assign(partner_id = partner_id)
-        return agents_dataframe_new
+        d = [[a.unique_id,a.production,a.consumption,a.tariff,a.t,a.reward] for a in self.schedule.agents]
+        agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward'])
+        #agents_dataframe.to_csv("out_log["+str(i+1)+"].csv",index=False)
+        return agents_dataframe
 
 class NegoAgent(Agent):
     def __init__(self,unique_id,model,measurements,decisions,rewards):
@@ -80,14 +73,13 @@ class NegoAgent(Agent):
         self.production = measurements[0]
         self.consumption = measurements[1]
         self.tariff = measurements[2]
-        self.seller_buyer()
+        self.t = self.seller_buyer()
         self.cost = self.transactions() # every transaction leads to a cost for the agent
         self.partner = self.partner_selection()
-        self.state = self.update_state(rewards)
 
-    def step(self, model,decisions,rewards,timestep):
-        # TODO update the state of agents
-        pass
+    def step(self, model,decisions,rewards,perceptions,timestep):
+        # update decisions of agents is called in the model
+        self.update_state(rewards,decisions,perceptions)
 
     def seller_buyer(self):
         if self.production > self.consumption:
@@ -100,7 +92,7 @@ class NegoAgent(Agent):
         # self.read_file()
         for a in other:
             if a != self:  # making sure that the agent doesn't select itself
-                if self.y == "buyer" and a.y == "seller" and self.tariff<=a.tariff: # modify tariff rule
+                if self.t == "buyer" and a.t == "seller" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.consumption <= a.production:
                         a.production = a.production-self.consumption
@@ -131,13 +123,8 @@ class NegoAgent(Agent):
         if j.production >= self.consumption:
             self.action = 0  # buy
 
-    def decision_fct(self):
-        # TODO this function is never called
-        return 1
-
-    def feedback(self):
-        return 1
-
-    def update_state(self,rewards):
-        self.state = rewards+1
-        return self.state
+    def update_state(self,rewards,decisions,perceptions):
+        self.reward = rewards[0]+1
+        self.production = perceptions[self.unique_id][0]+1
+        self.consumption = perceptions[self.unique_id][1]+1
+        self.tariff = perceptions[self.unique_id][2]+1

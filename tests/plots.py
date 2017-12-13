@@ -1,4 +1,5 @@
-from Nego.bilateral.Agents_Supervisor import NegoModel
+from nego.mediated.Agents_Supervisor import NegoModel
+from nego.bilateral.Agents_Supervisor import NegoModel
 import matplotlib.pyplot as plt
 import pandas as pd
 import csv
@@ -6,19 +7,18 @@ import csv
 #### LOG ####
 N = 100
 model = NegoModel(N)
-m=model.perception()
-decisions = model.decision_fct()
-rewards = model.feedback()
-agents=model.init_agents(m,decisions,rewards)
-partner = [a.partner for a in agents]
-partner_id = [a.unique_id for a in partner]
-d = [[a.unique_id,a.production,a.consumption,a.tariff,a.type,a.reward,a.state,a.action] for a in agents]
-agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward','state','action'])
-agents_dataframe_new = agents_dataframe.assign(partner_id = partner_id)
-#agents_dataframe_new.to_csv('out_log.csv',sep=",")
+timestep = 3
+for i in range(timestep):
+    m=model.perception()
+    decisions = model.decision_fct()
+    rewards = model.feedback()
+    perceptions = model.perception()
+    model.create_agents(m,decisions,rewards)
+    model.step(decisions,rewards,perceptions,timestep)
+    model.log().to_csv("out_log["+str(i+1)+"].csv",index=False)
 
 #### PLOT ####
-with open('out_log.csv', newline='') as csvfile:
+with open('out_log['+str(timestep)+'].csv', newline='') as csvfile:
     reader = csv.reader(csvfile,delimiter=',', quotechar='|')
     label = []
     y = []
