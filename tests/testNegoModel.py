@@ -21,7 +21,6 @@ class TestNegoModel(unittest.TestCase):
         self.n=np.random.randint(1,40)
         self.m=NegoModel(self.n)
 
-    # TODO - Remove this: measurementGen calls 3 values only per agent, so this assertEqual will not work. The other tests are working.
     # def test_createagents_addtoscheduler(self):
     #     """
     #     Tests that create_agents() correctly creates the agents and adds them to the scheduler
