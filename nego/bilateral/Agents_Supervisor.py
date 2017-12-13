@@ -1,9 +1,10 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
 from src.utils import *
-from Nego.bilateral.MeasurementGen import MeasurementGen
-from Nego.bilateral.Decisions import DecisionLogic
-from Nego.bilateral.Feedback_calculation import feedback
+from nego.bilateral.MeasurementGen import MeasurementGen
+from nego.bilateral.Decisions import DecisionLogic
+from nego.bilateral.Feedback_calculation import feedback
+import pandas as pd
 
 class NegoModel(Model):
     def __init__(self, N):
@@ -22,8 +23,8 @@ class NegoModel(Model):
         return measurements_new
 
     def decision_fct(self):
-        d=DecisionLogic()
-        all_actions=[d.chose_action(i) for i in range(self.num_agents)]
+        # d=DecisionLogic()
+        all_actions=[i.decision_fct() for i in self.schedule.agents]
         return all_actions
 
     def create_agents(self,measurements_now,decisions,rewards):
@@ -42,10 +43,11 @@ class NegoModel(Model):
         ret=[NegoAgent(i, self, m,d,r) for i,m,d,r in zip(range(self.num_agents),measurements_now,decisions,rewards)]
         return ret
 
-    def step(self,decisions,rewards,timestep):
-        # TODO call the log fct, update perceptions, rewards
+    def step(self,decisions,rewards,perceptions,timestep):
+        # call the log fct, update perceptions, rewards
         self.feedback()
-        self.schedule.step(self,decisions,rewards,timestep)
+        self.log(timestep)
+        self.schedule.step(self,decisions,rewards,perceptions,timestep)
 
     def evaluate(self,decisions,timestep):
         # Stefano: I am not sure that these measures (as defined) are suitable for the energy scenario... we should discuss about this
@@ -58,6 +60,15 @@ class NegoModel(Model):
         rewards = [feedback.feedbackGen(i) for i in range(self.num_agents)]
         return rewards
 
+    def log(self,timestep):
+        # partner = [a.partner for a in self.schedule.agents]
+        # partner_id = [a.unique_id for a in partner]
+        # agents_dataframe_new = agents_dataframe.assign(partner_id = partner_id)
+        for i in range(timestep):
+            d = [[a.unique_id,a.production,a.consumption,a.tariff,a.type,a.reward] for a in self.schedule.agents]
+            agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward'])
+            agents_dataframe.to_csv("out_log["+str(i+1)+"].csv")
+
 class NegoAgent(Agent):
     def __init__(self,unique_id,model,measurements,decisions,rewards):
         super().__init__(unique_id,model)
@@ -67,28 +78,27 @@ class NegoAgent(Agent):
         self.production = measurements[0]
         self.consumption = measurements[1]
         self.tariff = measurements[2]
-
-        self.seller_buyer()
+        self.type = self.seller_buyer()
         self.cost = self.transactions() # every transaction leads to a cost for the agent
-        #self.partner = self.partner_selection()
-        self.state = self.update_state(rewards)
+        self.partner = self.partner_selection()
 
-    def step(self, model,decisions,rewards,timestep):
-        # TODO update decisions of agents
-        self.update_state(rewards)
+    def step(self, model,decisions,rewards,perceptions,timestep):
+        # update decisions of agents is called in the model
+        self.update_state(rewards,decisions,perceptions)
 
     def seller_buyer(self):
         if self.production > self.consumption:
-            self.t = "seller"
+            self.type = "seller"
         if self.production < self.consumption:
-            self.t = "buyer"
+            self.type = "buyer"
+        return self.type
 
     def partner_selection(self):
         other = self.model.schedule.agents
         # self.read_file()
         for a in other:
             if a != self:  # making sure that the agent doesn't select itself
-                if self.y == "buyer" and a.y == "seller" and self.tariff<=a.tariff: # modify tariff rule
+                if self.type == "buyer" and a.type == "seller" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.consumption <= a.production:
                         a.production = a.production-self.consumption
@@ -98,7 +108,7 @@ class NegoAgent(Agent):
                         self.consumption = self.consumption-a.production
                         a.production = 0
                     return self.partner
-                elif self.t == "seller" and a.t == "buyer" and self.tariff<=a.tariff: # modify tariff rule
+                elif self.type == "seller" and a.type == "buyer" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.production <= a.consumption:
                         a.consumption = a.consumption - self.production
@@ -109,17 +119,19 @@ class NegoAgent(Agent):
                     return self.partner
 
     def transactions(self):
-        if self.t == "seller":
+        if self.type == "seller":
             return 1  # modify this cost with every transaction
 
-    def decision_fct(self, decision):
-        # TODO this function is never called
+    def decision_fct(self):
+        # this function is called now for bilateral and not mediated.
         d=DecisionLogic()
-        self.action = d.chose_action(decision)
+        self.action = d.chose_action()
 
     def feedback(self):
         return 1
 
-    def update_state(self,rewards):
-        self.state = rewards+1
-        return self.state
+    def update_state(self,rewards,decisions,perceptions):
+        self.reward = rewards[self.unique_id]+1
+        self.production = perceptions[self.unique_id][0]+1
+        self.consumption = perceptions[self.unique_id][1]+1
+        self.tariff = perceptions[self.unique_id][2]+1
