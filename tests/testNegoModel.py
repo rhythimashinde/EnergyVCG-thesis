@@ -1,8 +1,8 @@
 import unittest
 from nego.bilateral.Agents_Supervisor import NegoModel
 from nego.bilateral.MeasurementGen import MeasurementGen
-from nego.mediated.Agents_Supervisor import NegoModel
-from nego.mediated.MeasurementGen import MeasurementGen
+#from nego.mediated.Agents_Supervisor import NegoModel
+#from nego.mediated.MeasurementGen import MeasurementGen
 from mesa.time import BaseScheduler
 import numpy as np
 
@@ -21,16 +21,22 @@ class TestNegoModel(unittest.TestCase):
         self.n=np.random.randint(1,40)
         self.m=NegoModel(self.n)
 
-    # def test_createagents_addtoscheduler(self):
-    #     """
-    #     Tests that create_agents() correctly creates the agents and adds them to the scheduler
-    #     """
-    #     m=MeasurementGen()
-    #     measurements=[m.get_measurements(i) for i in range(self.n)]
-    #     decisions=range(self.n)
-    #     rewards = self.m.feedback()
-    #     self.m.create_agents(measurements,decisions,rewards)
-    #     self.assertEqual(len(self.m.schedule.agents),self.n) # all agent are added correctly
+    def test_createagents_addtoscheduler(self):
+        """
+        Tests that create_agents() correctly creates the agents and adds them to the scheduler
+        """
+        me=MeasurementGen()
+        measurements=[me.get_measurements(i) for i in range(self.n)]
+        print(self.n)
+        print(measurements)
+        decisions=range(self.n)
+        print(decisions)
+        rewards = self.m.feedback()
+        print(rewards)
+        self.m.create_agents(measurements,decisions,rewards)
+        print (self.m.schedule.agents)
+        print (len(self.m.schedule.agents))
+        self.assertEqual(len(self.m.schedule.agents),self.n) # all agent are added correctly
 
     def test_createagents_zeroagents(self):
         """

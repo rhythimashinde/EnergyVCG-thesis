@@ -7,13 +7,15 @@ import csv
 #### LOG ####
 N = 100
 model = NegoModel(N)
-m=model.perception()
-decisions = model.decision_fct()
-rewards = model.feedback()
-perceptions = model.perception()
 timestep = 3
 for i in range(timestep):
+    m=model.perception()
+    decisions = model.decision_fct()
+    rewards = model.feedback()
+    perceptions = model.perception()
+    model.create_agents(m,decisions,rewards)
     model.step(decisions,rewards,perceptions,timestep)
+    model.log().to_csv("out_log["+str(i+1)+"].csv",index=False)
 
 #### PLOT ####
 with open('out_log['+str(timestep)+'].csv', newline='') as csvfile:

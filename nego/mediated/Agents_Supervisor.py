@@ -14,7 +14,6 @@ class NegoModel(Model):
         measurements = self.perception()
         decisions = self.decision_fct()
         rewards = self.feedback()
-        self.create_agents(measurements,decisions,rewards)
         self.evaluate(decisions,self.schedule.time)
 
     def perception(self):
@@ -46,7 +45,7 @@ class NegoModel(Model):
 
     def step(self,decisions,rewards,perceptions,timestep):
         # call the log fct, update perceptions, <rewards
-        self.log(timestep)
+        # self.log(timestep)
         self.schedule.step(self,decisions,rewards,perceptions,timestep)
 
     def evaluate(self,decisions,timestep):
@@ -59,14 +58,11 @@ class NegoModel(Model):
         rewards = [feedback.feedbackGen(i) for i in range(self.num_agents)]
         return rewards
 
-    def log(self,timestep):
-        # partner = [a.partner for a in self.schedule.agents]
-        # partner_id = [a.unique_id for a in partner]
-        # agents_dataframe_new = agents_dataframe.assign(partner_id = partner_id)
-        for i in range(timestep):
-            d = [[a.unique_id,a.production,a.consumption,a.tariff,a.type,a.reward] for a in self.schedule.agents]
-            agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward'])
-            agents_dataframe.to_csv("out_log["+str(i+1)+"].csv")
+    def log(self):
+        d = [[a.unique_id,a.production,a.consumption,a.tariff,a.t,a.reward] for a in self.schedule.agents]
+        agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward'])
+        #agents_dataframe.to_csv("out_log["+str(i+1)+"].csv",index=False)
+        return agents_dataframe
 
 class NegoAgent(Agent):
     def __init__(self,unique_id,model,measurements,decisions,rewards):
@@ -77,7 +73,7 @@ class NegoAgent(Agent):
         self.production = measurements[0]
         self.consumption = measurements[1]
         self.tariff = measurements[2]
-        self.type= self.seller_buyer()
+        self.t = self.seller_buyer()
         self.cost = self.transactions() # every transaction leads to a cost for the agent
         self.partner = self.partner_selection()
 
@@ -87,16 +83,16 @@ class NegoAgent(Agent):
 
     def seller_buyer(self):
         if self.production > self.consumption:
-            self.type = "seller"
+            self.t = "seller"
         if self.production < self.consumption:
-            self.type = "buyer"
+            self.t = "buyer"
 
     def partner_selection(self):
         other = self.model.schedule.agents
         # self.read_file()
         for a in other:
             if a != self:  # making sure that the agent doesn't select itself
-                if self.type == "buyer" and a.type == "seller" and self.tariff<=a.tariff: # modify tariff rule
+                if self.t == "buyer" and a.t == "seller" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.consumption <= a.production:
                         a.production = a.production-self.consumption
@@ -106,7 +102,7 @@ class NegoAgent(Agent):
                         self.consumption = self.consumption-a.production
                         a.production = 0
                     return self.partner
-                elif self.type == "seller" and a.type == "buyer" and self.tariff<=a.tariff: # modify tariff rule
+                elif self.t == "seller" and a.t == "buyer" and self.tariff<=a.tariff: # modify tariff rule
                     self.partner = a
                     if self.production <= a.consumption:
                         a.consumption = a.consumption - self.production
@@ -117,7 +113,7 @@ class NegoAgent(Agent):
                     return self.partner
 
     def transactions(self):
-        if self.type == "seller":
+        if self.t == "seller":
             return 1  # modify this cost with every transaction
 
     def chose_action(self):
