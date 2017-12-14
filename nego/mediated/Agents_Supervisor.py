@@ -4,7 +4,7 @@ import pandas as pd
 from src.utils import *
 from nego.mediated.MeasurementGen import MeasurementGen
 from nego.mediated.Decisions import DecisionLogic
-from nego.bilateral.Feedback_calculation import feedback
+from nego.mediated.Feedback_calculation import feedback
 
 class NegoModel(Model):
     def __init__(self, N):
