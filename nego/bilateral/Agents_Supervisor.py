@@ -1,20 +1,17 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
-from src.utils import *
+from nego.utilsnego import *
 from nego.bilateral.MeasurementGen import MeasurementGen
 from nego.bilateral.Decisions import DecisionLogic
 from nego.bilateral.Feedback_calculation import feedback
 import pandas as pd
+import numpy as np
 
 class NegoModel(Model):
     def __init__(self, N):
         super().__init__(N)
         self.num_agents = N
         self.schedule = RandomActivation(self)
-        measurements = self.perception()
-        decisions = self.decision_fct()
-        rewards = self.feedback()
-        self.evaluate(decisions,self.schedule.time)
 
     def perception(self):
         m=MeasurementGen()
@@ -45,25 +42,44 @@ class NegoModel(Model):
     def step(self,decisions,rewards,perceptions,timestep):
         # update perceptions, rewards
         self.feedback()
-        # self.log(decisions,rewards,perceptions,timestep) # removed from here included in the plot file, can be updated by including here if needed
+        # self.log(decisions,rewards,perceptions,timestep)
+        # removed from here included in the plot file, can be updated by including here if needed
         self.schedule.step(self,decisions,rewards,perceptions,timestep)
 
-    def evaluate(self,decisions,timestep):
-        # Stefano: I am not sure that these measures (as defined) are suitable for the energy scenario... we should discuss about this
-         return dict(gini=gini(decisions),
-                          efficiency=efficiency(self.num_agents,tot_contributions(decisions)),
-                          success=success(self.num_agents,tot_contributions(decisions)),
-                          tot_contrib = tot_contributions(decisions))
+    def evaluate(self,agents_total,ratio,total,timestep):
+        return dict(efficiency=efficiency_nego(ratio,total),
+                    success = success_nego(agents_total,total))
 
     def feedback(self):
         rewards = [feedback.feedbackGen(i) for i in range(self.num_agents)]
         return rewards
 
-    def log(self):
-        d = [[a.unique_id,a.production,a.consumption,a.tariff,a.t,a.reward] for a in self.schedule.agents]
-        agents_dataframe = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward'])
-        #agents_dataframe.to_csv("out_log["+str(i+1)+"].csv",index=False)
-        return agents_dataframe
+    def log_all(self):
+        #getting agent data
+        d = [[a.unique_id,a.production,a.consumption,a.tariff,a.t,a.reward,a.partner] for a in self.schedule.agents]
+        a_df = pd.DataFrame(data=d,columns=['id','production','consumption','tariff','type','reward','partner'])
+        return a_df
+
+    def log(self,full_log):
+        a_df_partner = full_log.dropna()# remove those agents with no partners
+        # getting partner data
+        partners = a_df_partner['partner']
+        partners_id = [x.unique_id for x in partners]
+        partners_consumption = [x.consumption for x in partners]
+        partners_production = [x.production for x in partners]
+        a_df_partner= a_df_partner.assign(partner_id = partners_id,
+                                          partners_consumption = partners_consumption,
+                                          partners_production = partners_production)
+        # further calculations on the data
+        a_df_partner['gap_seller'] = np.abs(a_df_partner['partners_consumption']-a_df_partner['production'])
+        a_df_partner['gap_buyer'] = np.abs(a_df_partner['partners_production']-a_df_partner['consumption'])
+        a_df_partner['max_seller'] = a_df_partner[['partners_consumption','production']].max(axis=1)
+        a_df_partner['max_buyer'] = a_df_partner[['partners_production','consumption']].max(axis=1)
+        a_df_partner['ratio_seller'] = a_df_partner['gap_seller']/a_df_partner['max_seller']
+        a_df_partner['ratio_buyer'] = a_df_partner['gap_buyer']/a_df_partner['max_buyer']
+        return a_df_partner
+        # if the whole dataframe is needed
+        # return agents_dataframe
 
 class NegoAgent(Agent):
     def __init__(self,unique_id,model,measurements,decisions,rewards):
@@ -87,6 +103,7 @@ class NegoAgent(Agent):
             self.t = "seller"
         if self.production < self.consumption:
             self.t = "buyer"
+        return self.t
 
     def partner_selection(self):
         other = self.model.schedule.agents
