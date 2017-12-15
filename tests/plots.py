@@ -21,28 +21,29 @@ for i in range(timestep):
     total = model.log(full_log).shape[0]
     if ratio != 0:
         model.evaluate(agents_total,ratio,total,timestep)
-    #model.log().to_csv("out_log["+str(i+1)+"].csv",index=False)
+    model.log(full_log).to_csv("out_log["+str(i+1)+"].csv",index=False)
 
-# #### PLOT ####
-# with open('out_log['+str(timestep)+'].csv', newline='') as csvfile:
-#     reader = csv.reader(csvfile,delimiter=',', quotechar='|')
-#     label = []
-#     y = []
-#     x = []
-#     for row in reader:
-#         if row[1] != 'id':
-#             label_row = row[5]
-#             production = row[2]
-#             id = row[1]
-#             y.append(production)
-#             x.append(id)
-#             label.append(label_row)
-#     colors = ['red' if l == "buyer" else 'green' for l in label]
-#     plt.scatter(x,y,color=colors)
-#     plt.legend(bbox_to_anchor=(1, 1), bbox_transform=plt.gcf().transFigure)
-#     plt.show()
-#
-# #### TEST THE EVALUATION ####
+#### PLOT ####
+with open('out_log['+str(timestep)+'].csv', newline='') as csvfile:
+    reader = csv.reader(csvfile,delimiter=',', quotechar='|')
+    label = []
+    y = []
+    x = []
+    for row in reader:
+        if row[1] != 'id':
+            label_row = row[5]
+            production = row[2]
+            id = row[1]
+            y.append(production)
+            x.append(id)
+            label.append(label_row)
+    colors = ['red' if l == "buyer" else 'green' for l in label]
+    plt.scatter(x,y,color=colors)
+    plt.legend(bbox_to_anchor=(1, 1), bbox_transform=plt.gcf().transFigure)
+    plt.show()
+
+#### TEST THE EVALUATION ####
+# TODO change the evaluation here by including decisions
 # s=NegoModel(5)
 # s.threshold=3
 # measures_poor = s.evaluate([1,0,0,0,0],0)
