@@ -5,7 +5,7 @@ from nego.bilateral.MeasurementGen import MeasurementGen
 #from nego.mediated.MeasurementGen import MeasurementGen
 from mesa.time import BaseScheduler
 import numpy as np
-
+#TODO change these evaluate functions
 class TestMeasurement(MeasurementGen):
     def get_measurements(self,i):
         # productions, consumptions, tariffs
