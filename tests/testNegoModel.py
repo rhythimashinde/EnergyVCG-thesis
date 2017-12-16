@@ -3,7 +3,6 @@ from nego.bilateral.Agents_Supervisor import NegoModel
 from nego.bilateral.MeasurementGen import MeasurementGen
 #from nego.mediated.Agents_Supervisor import NegoModel
 #from nego.mediated.MeasurementGen import MeasurementGen
-from mesa.time import BaseScheduler
 import numpy as np
 #TODO change these evaluate functions
 class TestMeasurement(MeasurementGen):
