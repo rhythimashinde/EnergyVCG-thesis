@@ -22,6 +22,15 @@ class NegoModel(Model):
         measurements_new=[m.get_measurements(i) for i in range(self.num_agents)]
         return measurements_new
 
+    def social_measurements(self,social_values):
+        """
+        Args:
+            social_values: the return value from the perceptions
+        Returns:
+            gets the values related to social parameters from the perception/ measurements
+        """
+        return [social_values[i][1] for i in range(self.num_agents)]
+
     def decision_fct(self):
         """
         Returns:
@@ -72,10 +81,9 @@ class NegoModel(Model):
             timestep: timestep of the model
         Returns: lays down the functions to be called when the model is forwarded by a step
         """
-        self.feedback()
         self.schedule.step(self,decisions,rewards,perceptions,timestep)
 
-    def evaluate(self,agents_total,ratio,total,timestep):
+    def evaluate(self,decisions,social_measurements,agents_total,ratio,total,costs,rewards,timestep):
         """
         Args:
             agents_total: total agents who want to meet demands (are either seller or buyer)
@@ -86,7 +94,9 @@ class NegoModel(Model):
             the evaluation measures results e.g. efficiency, success and fairness
         """
         return dict(efficiency=efficiency_nego(ratio,total),
-                    success=success_nego(agents_total,total))
+                    success=success_nego(agents_total,total),
+                    social_welfare=social_welfare(costs,rewards),
+                    fairness=fairness(social_measurements,decisions))
 
     def feedback(self):
         """
@@ -95,6 +105,9 @@ class NegoModel(Model):
         """
         rewards = [feedback.feedbackGen(i) for i in range(self.num_agents)]
         return rewards
+
+    def transactions_all(self):
+        return [i.transactions() for i in self.schedule.agents]
 
     def log_all(self):
         """
@@ -146,7 +159,7 @@ class NegoAgent(Agent):
         #
         """
         Args:
-            model: model (negomodel)
+            model: model (NegoModel)
             timestep: timestep of the model
             perceptions: list of measurements
             decisions: the list of decisions
@@ -201,7 +214,11 @@ class NegoAgent(Agent):
             total number of transactions
         """
         if self.t == "seller":
-            return 1  # TODO modify the cost here with every transaction
+            self.cost= 1
+        else:
+            self.cost= 0
+        return self.cost
+        # TODO modify the cost here with every transaction
 
     def decision_fct(self):
         """
@@ -210,6 +227,7 @@ class NegoAgent(Agent):
         """
         d=DecisionLogic()
         self.action = d.chose_action()
+        return self.action
 
     def feedback(self):
         return 1

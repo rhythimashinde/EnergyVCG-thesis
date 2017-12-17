@@ -7,12 +7,14 @@ import csv
 #### LOG ####
 N = 100
 model = NegoModel(N)
-timestep = 3
+timestep = 4
 for i in range(timestep):
     m=model.perception()
     decisions = model.decision_fct()
     rewards = model.feedback()
     perceptions = model.perception()
+    social_measurements = model.social_measurements(perceptions)
+    costs = model.transactions_all()
     model.create_agents(m,decisions,rewards)
     model.step(decisions,rewards,perceptions,timestep)
     full_log = model.log_all()
@@ -20,12 +22,12 @@ for i in range(timestep):
     ratio = model.log(full_log)['ratio_seller'].sum()
     total = model.log(full_log).shape[0]
     if ratio != 0:
-        model.evaluate(agents_total,ratio,total,timestep)
-    model.log(full_log).to_csv("out_log["+str(i+1)+"].csv",index=False)
+        model.evaluate(decisions,social_measurements,agents_total,ratio,total,rewards,costs,timestep)
+    model.log(full_log).to_csv("out_log.csv",index=False)
 
 #### PLOT ####
 # TODO define better plots with clear differentiating results
-# with open('out_log['+str(timestep)+'].csv', newline='') as csvfile:
+# with open('out_log.csv', newline='') as csvfile:
 #     reader = csv.reader(csvfile,delimiter=',', quotechar='|')
 #     label = []
 #     y = []
@@ -43,7 +45,7 @@ for i in range(timestep):
 #     plt.legend(bbox_to_anchor=(1, 1), bbox_transform=plt.gcf().transFigure)
 #     plt.show()
 
-#### TEST THE EVALUATION ####
+#### PLOT THE EVALUATION ####
 # TODO change the evaluation here by including decisions
 # s=NegoModel(5)
 # s.threshold=3
