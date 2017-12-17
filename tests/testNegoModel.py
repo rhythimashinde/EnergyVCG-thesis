@@ -4,11 +4,11 @@ from nego.bilateral.MeasurementGen import MeasurementGen
 #from nego.mediated.Agents_Supervisor import NegoModel
 #from nego.mediated.MeasurementGen import MeasurementGen
 import numpy as np
-#TODO change these evaluate functions
+
 class TestMeasurement(MeasurementGen):
     def get_measurements(self,i):
-        # productions, consumptions, tariffs
-        return [i,i+0.1,i+0.2]
+        # productions, consumptions, tariffs ,social value
+        return [i,i+0.1,i+0.2,i+0.3]
 
 class TestNegoModel(unittest.TestCase):
     """
@@ -54,7 +54,7 @@ class TestNegoModel(unittest.TestCase):
         decisions=range(self.n) # each decision is the agent id
         rewards = self.m.feedback()
         agents=self.m.init_agents(measurements,decisions,rewards)
-        ms=[[round(a.production,2),round(a.consumption,2),round(a.tariff,2)] for a in agents] # the measurement
+        ms=[[round(a.production,2),round(a.consumption,2),round(a.tariff,2),round(a.social_value,2)] for a in agents] # the measurement
         ds=[a.action for a in agents] # the decisions
         self.assertEqual(ms,measurements) # check that initialization was correct
         self.assertEqual(ds,list(decisions))
@@ -70,7 +70,7 @@ class TestNegoModel(unittest.TestCase):
         rewards=self.m.feedback()
         agents=self.m.init_agents(measurements,decisions,rewards)
         self.assertEqual(len(agents),self.n) # agent have the correct length
-        ms=[[a.production,a.consumption,a.tariff] for a in agents] # the measurement
+        ms=[[a.production,a.consumption,a.tariff,a.social_value] for a in agents] # the measurement
         ds=[a.action for a in agents] # the decisions
         ms1=measurements[:self.n]     # take only the first n
         ds1=list(decisions)[:self.n]     # take only the first n
@@ -81,11 +81,11 @@ class TestNegoModel(unittest.TestCase):
         decisions=range(self.n-1)
         agents=self.m.init_agents(measurements,decisions,rewards)
         self.assertEqual(len(agents),self.n) # agent have the correct length
-        ms=[[a.production,a.consumption,a.tariff] for a in agents] # the measurement
+        ms=[[a.production,a.consumption,a.tariff,a.social_value] for a in agents] # the measurement
         ds=[a.action for a in agents] # the decisions
         ms1=ms[:-1]     # take only the first n-1
         ds1=ds[:-1]     # take only the first n-1
         self.assertEqual(ms1,measurements) # check that initialization was correct
         self.assertEqual(ds1,list(decisions))
-        self.assertEqual(ms[-1],[0,0,0]) # default value of 0 for the last element
+        self.assertEqual(ms[-1],[0,0,0,0]) # default value of 0 for the last element
         self.assertEqual(ds[-1],0) # default value of 0 for the last element

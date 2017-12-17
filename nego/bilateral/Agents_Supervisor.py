@@ -93,10 +93,10 @@ class NegoModel(Model):
         Returns:
             the evaluation measures results e.g. efficiency, success and fairness
         """
-        return dict(efficiency=efficiency_nego(ratio,total),
-                    success=success_nego(agents_total,total),
-                    social_welfare=social_welfare(costs,rewards),
-                    fairness=fairness(social_measurements,decisions))
+        return dict(efficiency=efficiency_nego(ratio,total),success=success_nego(agents_total,total),
+                    social_welfare=social_welfare(costs,rewards,self.num_agents),
+                    fairness=fairness(social_measurements,decisions,self.num_agents),
+                    gini=gini(decisions))
 
     def feedback(self):
         """
@@ -179,7 +179,7 @@ class NegoAgent(Agent):
             self.t = "seller"
         if self.production < self.consumption:
             self.t = "buyer"
-        return self.t
+        #return self.t #comment this out when running test files, keep it for the plots file.
 
     def partner_selection(self):
         """

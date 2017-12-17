@@ -27,7 +27,7 @@ def success_nego(tot_agents,tot_transactions):
     print("success=",(tot_transactions*2-tot_agents)/tot_agents)
     return (tot_transactions*2-tot_agents)/tot_agents
 
-def fairness(measurements,decisions):
+def fairness(measurements,decisions,N):
     """
     Args:
         decisions: list of decisions associated to every agent
@@ -35,28 +35,29 @@ def fairness(measurements,decisions):
     Returns:
         relation coefficient based on the measurements of agents being related to the decisions they take
     """
-    if len(measurements)>100:
-        measurements = measurements[(len(measurements)-100):]
-    if len(decisions)>100:
-        decisions = decisions[(len(decisions)-100):]
+    if len(measurements)>N:
+        measurements = measurements[(len(measurements)-N):]
+    if len(decisions)>N:
+        decisions = decisions[(len(decisions)-N):]
     assert(len(measurements)==len(decisions))
     slope,intercept,rvalue,pvaue,stderr = linregress(measurements,decisions)
     print("fairness =", slope)
     return linregress(measurements,decisions)
 
-def social_welfare(costs,rewards):
+def social_welfare(costs,rewards,N):
     """
     Computes the social welfare for the current round
     Args:
-    costs: a list of costs, one for each agent
-    rewards: a list of rewards, one for each agent
-    Returns: the social welfare
+        costs: a list of costs, one for each agent
+        rewards: a list of rewards, one for each agent
+    Returns:
+        the social welfare value
     """
 
-    if len(costs)>100:
-        costs = costs[(len(costs)-100):]
-    if len(rewards)>100:
-        rewards = rewards[(len(rewards)-100):]
+    if len(costs)>N:
+        costs = costs[(len(costs)-N):]
+    if len(rewards)>N:
+        rewards = rewards[(len(rewards)-N):]
     assert(len(costs)==len(rewards))
     print ("social_welfare=",np.mean(np.array(costs)-np.array(rewards)))
     return np.mean(np.array(costs)-np.array(rewards))

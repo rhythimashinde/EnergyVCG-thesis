@@ -2,8 +2,6 @@ from nego.mediated.Agents_Supervisor import NegoModel
 from nego.bilateral.Agents_Supervisor import NegoModel
 import unittest
 
-#TODO change these evaluate functions
-
 class TestMeasures(unittest.TestCase):
     """
     This class tests the behavior of the model in a simple scenario
@@ -13,18 +11,23 @@ class TestMeasures(unittest.TestCase):
         super(TestMeasures, self).__init__(*args, **kwargs)
         self.N=5
         self.s=NegoModel(self.N)
-        self.s.threshold=3
 
     def test_uniform(self):
-        measures = self.s.evaluate([1,1,1,1,1],0)
-        self.assertEqual(round(measures["gini"],2),0)
-        self.assertEqual(measures["efficiency"],1)
-        self.assertEqual(round(measures["success"],2),1)
-        self.assertEqual(measures["tot_contrib"],5)
-
-    def test_bipolar(self):
-        measures = self.s.evaluate([1,1,1,0,0],0)
-        self.assertEqual(round(measures["gini"],2),0.4)
-        self.assertEqual(measures["efficiency"],0)
-        self.assertEqual(round(measures["success"],2),0.6)
-        self.assertEqual(measures["tot_contrib"],3)
+        m=self.s.perception()
+        decisions = self.s.decision_fct()
+        rewards = self.s.feedback()
+        perceptions = self.s.perception()
+        social_measurements = self.s.social_measurements(perceptions)
+        costs = self.s.transactions_all()
+        self.s.create_agents(m,decisions,rewards)
+        self.s.step(decisions,rewards,perceptions,0)
+        full_log = self.s.log_all()
+        agents_total = full_log.shape[0]
+        ratio = self.s.log(full_log)['ratio_seller'].sum()
+        total = self.s.log(full_log).shape[0]
+        if ratio != 0:
+            measures = self.s.evaluate(decisions,social_measurements,agents_total,ratio,total,rewards,costs,0)
+            self.assertEqual(round(measures["gini"],2),0.4)
+            self.assertEqual(round(measures["efficiency"],2),0.47)
+            self.assertEqual(round(measures["success"],2),0)
+            self.assertEqual(measures["fairness"],0.25)
