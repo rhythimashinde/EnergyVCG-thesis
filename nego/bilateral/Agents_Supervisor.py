@@ -29,7 +29,7 @@ class NegoModel(Model):
         Returns:
             gets the values related to social parameters from the perception/ measurements
         """
-        return [social_values[i][1] for i in range(self.num_agents)]
+        return [social_values[i][3] for i in range(self.num_agents)]
 
     def decision_fct(self):
         """
@@ -151,6 +151,7 @@ class NegoAgent(Agent):
         self.production = measurements[0]
         self.consumption = measurements[1]
         self.tariff = measurements[2]
+        self.social_value = measurements[3]
         self.t = self.seller_buyer()
         self.cost = self.transactions() # every transaction leads to a cost for the agent
         self.partner = self.partner_selection()

@@ -7,4 +7,4 @@ class MeasurementGen():
 
     def get_measurements(self,i):
         # productions, consumptions, tariffs
-        return random.sample(range(10), 3)
+        return random.sample(range(10), 4)
