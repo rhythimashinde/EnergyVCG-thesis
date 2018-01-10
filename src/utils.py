@@ -58,7 +58,7 @@ def efficiency(thresh,tot_contrib):
     tot_contrib: the sum of contributions
     Returns: either the ratio between needs and contributions if successful or 0
     """
-    return (thresh/tot_contrib) if tot_contrib>=thresh else 0
+    return (-1 if tot_contrib==0 else ((thresh/tot_contrib) if tot_contrib>=thresh else 0))
 
 def efficiency_mean(efficiencies):
     """

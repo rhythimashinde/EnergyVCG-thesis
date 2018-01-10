@@ -1,13 +1,20 @@
-class BaseAgent():
+import numpy as np
+from mesa import Agent
+from DecisionLogic import *
+
+class BaseAgent(Agent):
     """
     Base agent
     """
-    def __init__(self,id_):
+    def __init__(self,unique_id,model,decision_fct=BaseDecisionLogic):
         """
         create agent
         """
-        # parameters
-        self.ID=id_
+        super().__init__(unique_id,model)
+        np.random.seed()
+        self.decision_fct=decision_fct(self) # new instance
+        self.current_state={}
+        self.log=[]
 
     def __log(self,timestep):
         """
@@ -16,33 +23,51 @@ class BaseAgent():
         Args:
         timestep: the index of the current round
         """
-        raise NotImplementedError("Please Implement this method")
+        dct=self.current_state.copy()
+        dct.update({"timestep":timestep,"action":self.get_decision()})
+        self.log.append(dct)
 
-    def __learn(self,feedback):
+    def __learn(self,perceptions,reward):
         """
         Update decision process.
         Private, called from within feedback
 
-        Args:
-        feedback: the reward obtained in this round
+        Kwargs:
+        perceptions: the state of the system.
+        perceptions: the reward.
         """
-        raise NotImplementedError("Please Implement this method")
+        self.decision_fct.feedback(perceptions,reward) # update state of decision fct
 
-    def feedback(self,decisions,partner=None):
+
+    def feedback(self,reward,timestep,perceptions=None):
         """
         Updates own state according to feedback obtained this round
 
         Args:
-        decisions: the actions of all other agents
-        partner: the agent partner in the transaction
+        reward: a dictionary containing the reward
+        timestep: the time
+        perceptions: a dictionary containing the current perception. It can be used as the state for a learning algorithm
         """
-        raise NotImplementedError("Please Implement this method")
+        self.current_state.update({"reward":reward})
+        if perceptions is None:
+            perceptions=self.current_state["perception"]
+        self.__learn(perceptions,reward)
+        self.__log(timestep)
 
-    def decision_fct(self,*args):
+    def get_decision(self):
+        return self.decision_fct.last_actions
+
+    def decisions(self,perceptions=None):
         """
-        Implements the decision logic
+        Decides the action for the given perceptions
+
+        Kwargs:
+        perceptions: the state of all agents in the population
         """
-        raise NotImplementedError("Please Implement this method")
+        if perceptions is None:
+            perceptions=self.current_state["perception"]
+        self.decision_fct.get_decision(perceptions)
+        return self.get_decision()
 
     def perception(self,perceptions,population=[]):
         """
@@ -52,4 +77,7 @@ class BaseAgent():
         perceptions: the perception dictionaries for each agent
         population: the other agents, in case information about them is known
         """
-        raise NotImplementedError("Please Implement this method")
+        self.current_state.update({"perception":perceptions})
+
+    def step(self):
+        self.decisions()
