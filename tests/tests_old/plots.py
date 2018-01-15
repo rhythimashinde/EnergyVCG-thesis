@@ -1,5 +1,5 @@
-from nego.mediated.Agents_Supervisor import NegoModel
-from nego.bilateral.Agents_Supervisor import NegoModel
+from nego.src_old.mediated.Agents_Supervisor import NegoModel
+from nego.src_old.bilateral.Agents_Supervisor import NegoModel
 import matplotlib.pyplot as plt
 import pandas as pd
 import csv

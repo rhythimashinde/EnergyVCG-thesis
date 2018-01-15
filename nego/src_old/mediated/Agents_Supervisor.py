@@ -2,9 +2,9 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 import pandas as pd
 from src.utils import *
-from nego.mediated.MeasurementGen import MeasurementGen
-from nego.mediated.Decisions import DecisionLogic
-from nego.mediated.Feedback_calculation import feedback
+from nego.src_old.mediated.MeasurementGen import MeasurementGen
+from nego.src_old.mediated.Decisions import DecisionLogic
+from nego.src_old.mediated.Feedback_calculation import feedback
 
 class NegoModel(Model):
     def __init__(self, N):

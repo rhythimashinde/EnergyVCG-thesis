@@ -1,9 +1,9 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
-from nego.utilsnego import *
-from nego.bilateral.MeasurementGen import MeasurementGen
-from nego.bilateral.Decisions import DecisionLogic
-from nego.bilateral.Feedback_calculation import feedback
+from nego.src_old.utilsnego import *
+from nego.src_old.bilateral.MeasurementGen import MeasurementGen
+from nego.src_old.bilateral.Decisions import DecisionLogic
+from nego.src_old.bilateral.Feedback_calculation import feedback
 import pandas as pd
 import numpy as np
 

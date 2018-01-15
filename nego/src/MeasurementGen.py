@@ -1,5 +1,5 @@
 import numpy as np
-class BaseMeasurementGen():
+class NegoMeasurementGen():
     def __init__(self):
         np.random.seed()
         pass

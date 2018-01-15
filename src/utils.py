@@ -1,3 +1,10 @@
+import pandas as pd
+import itertools
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
+#rcParams.update({'figure.autolayout': True})
 import numpy as np
 
 def gini(array):
@@ -58,7 +65,7 @@ def efficiency(thresh,tot_contrib):
     tot_contrib: the sum of contributions
     Returns: either the ratio between needs and contributions if successful or 0
     """
-    return (thresh/tot_contrib) if tot_contrib>=thresh else 0
+    return (-1 if tot_contrib==0 else ((thresh/tot_contrib) if tot_contrib>=thresh else 0))
 
 def efficiency_mean(efficiencies):
     """
@@ -106,3 +113,91 @@ def contributions(decisions):
 def tot_contributions(decisions):
     assert(all(np.logical_or(np.array(decisions)==1,np.array(decisions)==0))) # either 0 or 1
     return np.sum(decisions)
+
+def compute_stats(data,idx=False,columns=False,drop_count=True):
+    """
+    Computes statistics (mean,std,confidence interval) for the given columns
+
+    Args:
+    data_: a data frame
+
+    Kwargs:
+    idx: a list of indexes on which to group, must be a list of valid column names. By default the index of the dataframe is used.
+    columns: the columns to aggregate, must be a list of valide column names. By default all columns are considered
+
+    Returns:
+A data frame with columns 'X_mean', 'X_std' and 'X_ci' containing the statistics for each column name X in 'columns'
+    """
+    data_=data.copy()
+    assert(not idx or isinstance(idx,list))
+    assert(not columns or isinstance(columns,list))
+    if isinstance(data_,list):
+        data_=pd.concat(data_,copy=False) # join all files
+    if not idx:
+        idx=data_.index
+        idx_c=[]
+    else:
+        idx_c=idx
+    if not columns:
+        columns=list(data_.columns[np.invert(data_.columns.isin(idx_c))])
+    data_["count"]=1
+    aggregations={c:[np.mean,np.std] for c in columns if c in data_._get_numeric_data().columns} # compute mean and std for each column
+    aggregations.update({"count":np.sum})                # count samples in every bin
+    data_=data_[columns+["count"]+idx_c].groupby(idx,as_index=False).agg(aggregations)
+    # flatten hierarchy of col names
+    data_.columns=["_".join(col).strip().strip("_") for col in data_.columns.values] # rename
+    # compute confidence interval
+    for c in columns:
+        data_[c+"_ci"]=data_[c+"_std"]*1.96/np.sqrt(data_["count_sum"])
+    if drop_count:
+        data_.drop("count_sum",1,inplace=True)
+    return data_
+
+def get_stats(log,varname,idx=["timestep"],cols=None):
+    """
+    Log: a list of dictionaries or data frames
+    """
+    df=[pd.DataFrame(i[varname]) for i in log]
+    return compute_stats(df,idx=idx,columns=cols)
+
+def plot_trend(df,xname,filename,trends=None):
+    if trends is None:
+        trends=[d[:-5] for d in df.columns if ("_mean" in d)]
+    fig,ax=plt.subplots()
+    x=df[xname]
+    ax.set_xlabel(xname)
+    #fig.suptitle(title)
+    #ax.set_ylabel(ylab or str(y))
+    # if ylim:
+    #     ax.set_ylim(ylim)
+    for y in trends:
+        ax.plot(x,df[y+"_mean"],label=y)
+        ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
+    fig.legend()
+    fig.savefig(filename,format='pdf')
+    plt.close(fig)
+
+def plot_measures(df,xname,filename,trends=None):
+    fig=plt.figure()
+    for measures,ylim,i in [[["efficiency","success","gini"],[0,1],0]
+                            ,[["cost","social_welfare","tot_contrib"],None,1]]:
+        ax = fig.add_subplot(121+i)
+        x=df[xname]
+        ax.set_xlabel(xname)
+    #fig.suptitle(title)
+    #ax.set_ylabel(ylab or str(y))
+    # if ylim:
+    #     ax.set_ylim(ylim)
+        for y in measures:
+            ax.plot(x,df[y+"_mean"],label=y)
+            ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
+        ax.legend()
+    fig.savefig(filename,format='pdf')
+    plt.close(fig)
+
+def expandgrid(dct):
+    """
+    dct: A dictionary where the keys are variables and the values are lists of values for these variables
+    Returns: A dataframe where the columns are the variables and the rows contain combinations of values
+    """
+    return pd.DataFrame(list(itertools.product(*dct.values())),columns=list(dct.keys()))
