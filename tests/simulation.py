@@ -14,7 +14,8 @@ def run_experiment(test,conf):
     for idx,r in expandgrid(conf["params"]).iterrows():
         params=r.to_dict()
         f=functools.partial(conf["meas_fct"],**params)
-        model=BaseSupervisor(conf["N"],measurement_fct=f,decision_fct=DecisionLogicSupervisorMandatory,agent_decision_fct=DecisionLogicEmpty,reward_fct=RewardLogicUniform,agent_type=BaseAgent)
+        model=BaseSupervisor(conf["N"],measurement_fct=f,decision_fct=DecisionLogicSupervisorMandatory,
+                             agent_decision_fct=DecisionLogicEmpty,reward_fct=RewardLogicUniform,agent_type=BaseAgent)
         model.run(conf["rep"],params=params)
         log_tot=log_tot+model.log # concatenate lists
     #print(log_tot)

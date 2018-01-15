@@ -2,6 +2,7 @@ import functools
 import itertools
 import pandas as pd
 import numpy as np
+from nego.src.Decisions import NegoDecisionLogicAgent
 from nego.src.Decisions import NegoDecisionLogic
 from nego.src.RewardLogic import NegoRewardLogic
 from nego.src.MeasurementGen import NegoMeasurementGen
@@ -14,7 +15,11 @@ def run_experiment(test,conf):
     for idx,r in expandgrid(conf["params"]).iterrows():
         params=r.to_dict()
         f=functools.partial(conf["meas_fct"],**params)
-        model=BaseSupervisor(conf["N"],measurement_fct=f,decision_fct=DecisionLogicSupervisorMandatory,agent_decision_fct=DecisionLogicEmpty,reward_fct=RewardLogicUniform,agent_type=BaseAgent)
+        model=BaseSupervisor(conf["N"],measurement_fct=f,
+                             decision_fct=NegoDecisionLogic,
+                             agent_decision_fct=NegoDecisionLogicAgent,
+                             reward_fct=NegoRewardLogic,
+                             agent_type=NegoAgent)
         model.run(conf["rep"],params=params)
         log_tot=log_tot+model.log # concatenate lists
     #print(log_tot)
@@ -22,13 +27,14 @@ def run_experiment(test,conf):
     varnames=[k for k,v in conf["params"].items() if len(v)>1] # keep vars for which there is more than one value
     for varname in varnames:
         stats_rew=get_stats(log_tot,"reward",idx=[varname])
-        stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["value","cost"])
+        stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","tariff"])
         stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["contribution","cost","contributed"])
-        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","cost","efficiency","social_welfare","success","tot_contrib"])
-        plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.pdf")
-        plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.pdf")
-        plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.pdf")
-        plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.pdf")
+        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","cost","efficiency",
+                                                                      "social_welfare","success","tot_contrib"])
+        plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
+        plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
+        plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
+        plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
 
 
 class RewardLogicFull(NegoRewardLogic):
@@ -63,7 +69,7 @@ class RewardLogicUniform(NegoRewardLogic):
         """
         The threshold is randomly generated around the average contribution
         """
-        percs=[p["value"] for p in self.model.current_state["perception"]]
+        percs=[p["production"] for p in self.model.current_state["perception"]]
         thresh=np.random.normal(loc=np.mean(percs),scale=1)
         thresh=max(1,thresh)
         contribs=np.sum([d["contribution"] for d in decisions])
@@ -95,7 +101,8 @@ class DecisionLogicSupervisorMandatory(NegoDecisionLogic):
     Returns a constant decision
     """
     def get_decision(self,perceptions):
-        self.last_actions=[{"contribution":a["value"],"cost":a["cost"],"agentID":a["agentID"],"contributed":True,"timestep":a["timestep"]} for a in perceptions]
+        self.last_actions=[{"contribution":a["value"],"cost":a["cost"],"agentID":a["agentID"],
+                            "contributed":True,"timestep":a["timestep"]} for a in perceptions]
         return self.last_actions
 
 class DecisionLogicSupervisorProbabilistic(NegoDecisionLogic):
@@ -103,7 +110,9 @@ class DecisionLogicSupervisorProbabilistic(NegoDecisionLogic):
     Returns a constant decision
     """
     def get_decision(self,perceptions):
-        self.last_actions=[{"contribution":a["value"],"cost":a["cost"],"agentID":a["agentID"],"contributed":(True if np.random.uniform()<=0.5 else False),"timestep":a["timestep"]} for a in perceptions]
+        self.last_actions=[{"contribution":a["value"],"cost":a["cost"],"agentID":a["agentID"],
+                            "contributed":(True if np.random.uniform()<=0.5 else False),"timestep":a["timestep"]}
+                           for a in perceptions]
         return self.last_actions
 
 class MeasurementGenUniform(NegoMeasurementGen):
@@ -116,7 +125,8 @@ class MeasurementGenUniform(NegoMeasurementGen):
         """
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
-        ret=[{"value":np.random.uniform(self.n1,self.n2),"cost":0,"timestep":timestep,"agentID":i} for i in range(len(population))]
+        ret=[{"value":np.random.uniform(self.n1,self.n2),"cost":0,"timestep":timestep,"agentID":i}
+             for i in range(len(population))]
         return ret
 
 class MeasurementGenNormal(NegoMeasurementGen):
@@ -129,7 +139,8 @@ class MeasurementGenNormal(NegoMeasurementGen):
         """
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
-        ret=[{"value":np.random.normal(loc=self.mu,scale=self.s),"cost":0,"timestep":timestep,"agentID":i} for i in range(len(population))]
+        ret=[{"production":np.random.normal(loc=self.mu,scale=self.s),"consumption":0,"timestep":timestep,"agentID":i,
+              "tariff":0} for i in range(len(population))]
         return ret
 
 class MeasurementGenBinomial(NegoMeasurementGen):
@@ -147,7 +158,8 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         """
         ret=[{"value":(np.random.normal(loc=self.mu1,scale=self.s1)
                        if i>len(population)*self.sep else
-                       np.random.normal(loc=self.mu2,scale=self.s2)),"cost":0,"timestep":timestep,"agentID":i} for i in range(len(population))]
+                       np.random.normal(loc=self.mu2,scale=self.s2)),"cost":0,"timestep":timestep,"agentID":i}
+             for i in range(len(population))]
         return ret
 
 if __name__ == '__main__':

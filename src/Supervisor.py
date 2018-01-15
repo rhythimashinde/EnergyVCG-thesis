@@ -11,7 +11,12 @@ from src.utils import *
 
 class BaseSupervisor(Model):
 
-    def __init__(self,N,measurement_fct=BaseMeasurementGen,decision_fct=BaseDecisionLogic,agent_decision_fct=BaseDecisionLogic,reward_fct=BaseRewardLogic,evaluation_fct=BaseEvaluationLogic,agent_type=BaseAgent):
+    def __init__(self,N,measurement_fct=BaseMeasurementGen,
+                 decision_fct=BaseDecisionLogic,
+                 agent_decision_fct=BaseDecisionLogic,
+                 reward_fct=BaseRewardLogic,
+                 evaluation_fct=BaseEvaluationLogic,
+                 agent_type=BaseAgent):
         super().__init__(N)
         np.random.seed()
         # parameters
@@ -43,7 +48,8 @@ class BaseSupervisor(Model):
         N: the size of the population
 
         Kwargs:
-        population: a list of agents with which to initialize the population, if the parameter is not provided a new population is initialized
+        population: a list of agents with which to initialize the population,
+        if the parameter is not provided a new population is initialized
         agent_type: the class of agents
 
         Returns:

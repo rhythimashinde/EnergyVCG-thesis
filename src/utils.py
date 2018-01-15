@@ -174,7 +174,7 @@ def plot_trend(df,xname,filename,trends=None):
         ax.plot(x,df[y+"_mean"],label=y)
         ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
     fig.legend()
-    fig.savefig(filename,format='pdf')
+    fig.savefig(filename,format='png')
     plt.close(fig)
 
 def plot_measures(df,xname,filename,trends=None):

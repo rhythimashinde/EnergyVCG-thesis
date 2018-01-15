@@ -1,10 +1,10 @@
 from src.Agent import BaseAgent
 from mesa import Agent
-from nego.src.Decisions import NegoDecisionLogic
+from nego.src.Decisions import NegoDecisionLogicAgent
 import operator
 
-class NegoAgent(Agent):
-    def __init__(self,unique_id,model,decision_fct=NegoDecisionLogic):
+class NegoAgent(BaseAgent):
+    def __init__(self,unique_id,model,decision_fct=NegoDecisionLogicAgent):
         super().__init__(unique_id,model)
         """
         The state contains:
@@ -18,7 +18,8 @@ class NegoAgent(Agent):
             consumption: how much energy is requireds
             cost: the cost of contribution
         """
-        self.current_state={"type":self.seller_buyer(),"tariff":0}
+        super().__init__(unique_id,model,decision_fct=decision_fct)
+        self.current_state={"partner":None,"action":0,"tariff":0}
 
     def seller_buyer(self):
         state=self.current_state["perception"]
@@ -54,7 +55,7 @@ class NegoAgent(Agent):
         else:
             sorted_list = buyers_sorted
             other_list = sellers_sorted
-        for i in range(sorted_list):
+        for i in range(len(sorted_list)):
             x = sorted_list[i]["agent"]
             y = other_list[i]["agent"]
             x.current_state["partner"] = y
@@ -64,6 +65,11 @@ class NegoAgent(Agent):
     #     if self.current_state["type"] == "seller":
     #         return 1  # modify this cost with every transaction
 
-    def feedback(reward,timestep,perceptions=None):
+    def feedback(self,reward,timestep,perceptions=None):
         self.current_state.update({"tariff":self.current_state["tariff"]+1})
         super().feedback(reward,timestep,perceptions)
+
+    def perception(self,perceptions,population=[]):
+        super().perception(perceptions,population=[])
+        self.current_state["type"]=self.seller_buyer()
+
