@@ -13,7 +13,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
         # call each agent's decision fct with the appropriate perception
         self.last_actions=[{"production":p["production"],"tariff":p["tariff"],
                             "consumption":p["consumption"],"agentID":a.unique_id,
-                            "contribution":0,"contributed":False,"cost":0,
+                            "contribution":0,"contributed":False,"cost":0,"action":0,
                             "new_production":a.current_state["perception"]["production"],
                             "new_consumption":a.current_state["perception"]["consumption"]}
                            for a,p,d in zip(self.model.schedule.agents,perceptions,decs)]
@@ -26,7 +26,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        a = self.model.partner_selection_orderbid()
+        a = self.model.partner_selection()
         perc=self.model.current_state["perception"]
         other=self.model.model.schedule.agents
         for i in other:
@@ -52,7 +52,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
                     a.current_state["perception"].update({"consumption":perc_other["consumption"] - perc["production"]})
             #else:
             #    raise(AssertionError,"Invalid partner selected: types not matching")
-        return self.model.current_state["action"]
+        return self.model.current_state["action"] # TODO bring this action as a value of dictionary of decision for plots
 
     def get_feedback(self,perceptions,reward):
         pass

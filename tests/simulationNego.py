@@ -27,8 +27,8 @@ def run_experiment(test,conf):
     varnames=[k for k,v in conf["params"].items() if len(v)>1] # keep vars for which there is more than one value
     for varname in varnames:
         stats_rew=get_stats(log_tot,"reward",idx=[varname])
-        stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","tariff"])
-        stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["contribution","cost","contributed"])
+        stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
+        stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
         stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","cost","efficiency",
                                                                       "social_welfare","success","tot_contrib"])
         plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
@@ -139,8 +139,10 @@ class MeasurementGenNormal(NegoMeasurementGen):
         """
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
-        ret=[{"production":np.random.normal(loc=self.mu,scale=self.s),"consumption":0,"timestep":timestep,"agentID":i,
-              "tariff":0} for i in range(len(population))]
+        ret=[{"production":np.random.normal(loc=self.mu,scale=self.s),
+              "consumption":np.random.normal(loc=self.mu,scale=self.s),
+              "timestep":timestep,"agentID":i,
+              "tariff":np.random.uniform(low=0,high=5)} for i in range(len(population))]
         return ret
 
 class MeasurementGenBinomial(NegoMeasurementGen):
