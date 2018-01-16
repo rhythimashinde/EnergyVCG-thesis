@@ -41,7 +41,7 @@ class NegoAgent(BaseAgent):
                     # modify tariff rule: # of different types
                     self.current_state["partner"] = a
         #print(self.current_state)
-        print(self.current_state["partner"])
+        #print(self.current_state["partner"])
         return self.current_state["partner"] # TODO bring this partner as a value of dictionary of decision for plots
 
     def partner_selection_orderbid(self):
@@ -69,7 +69,7 @@ class NegoAgent(BaseAgent):
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
             #print(x,y)
-        print(self.current_state["partner"])
+        #print(self.current_state["partner"])
         return self.current_state["partner"]
 
 

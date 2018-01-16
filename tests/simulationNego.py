@@ -158,15 +158,23 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         """
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
-        ret=[{"value":(np.random.normal(loc=self.mu1,scale=self.s1)
+        ret=[{"consumption":(np.random.normal(loc=self.mu1,scale=self.s1)
                        if i>len(population)*self.sep else
-                       np.random.normal(loc=self.mu2,scale=self.s2)),"cost":0,"timestep":timestep,"agentID":i}
+                       np.random.normal(loc=self.mu2,scale=self.s2)),
+              "production":(np.random.normal(loc=self.mu1,scale=self.s1)
+                       if i>len(population)*self.sep else
+                       np.random.normal(loc=self.mu2,scale=self.s2)),
+              "tariff":np.random.uniform(low=0,high=5),
+              "cost":0,"timestep":timestep,"agentID":i}
              for i in range(len(population))]
         return ret
 
 if __name__ == '__main__':
-    #tests={"uniform":{"N":10,"rep":10,"params":{"mu":[5,20,50]},"meas_fct":MeasurementGenNormal},"binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},"meas_fct":MeasurementGenBinomial}}
-    tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
-    #tests={"binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},"meas_fct":MeasurementGenBinomial}}
+    # tests={"uniform":{"N":10,"rep":10,"params":{"mu":[5,20,50]},"meas_fct":MeasurementGenNormal},
+    #        "binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},
+    #                    "meas_fct":MeasurementGenBinomial}}
+    #tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
+    tests={"binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},
+                       "meas_fct":MeasurementGenBinomial}}
     for test,conf in tests.items():
         run_experiment(test,conf)
