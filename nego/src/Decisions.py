@@ -26,32 +26,33 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        a = self.model.partner_selection()
-        perc=self.model.current_state["perception"]
-        other=self.model.model.schedule.agents
-        for i in other:
-            perc_other = i.current_state["perception"]
-            if self.model.current_state["type"] == "buyer" and a.current_state["type"] == "seller":
-                self.model.current_state.update({"action": 0})  # buy
-                a.current_state.update({"action": 1}) # sell
-                if perc["consumption"] <= perc_other["production"]:
-                    a.current_state["perception"].update({"production":perc_other["production"]-perc["consumption"]})
-                    self.model.current_state["perception"].update({"consumption": 0})
-                    # allocate this remaining energy as surplus in second round
-                else:           # not all needs are satisfied
-                    a.current_state["perception"].update({"production": 0})
-                    self.model.current_state["perception"].update({"consumption": perc["consumption"]-perc_other["production"]})
-            elif self.model.current_state["type"] == "seller" and a.current_state["type"] == "buyer":
-                self.model.current_state.update({"action": 1})  # sell
-                a.current_state.update({"action": 0}) # buy
-                if perc["production"] >= perc_other["consumption"]:
-                    self.model.current_state["perception"].update({"production": perc["production"] - perc_other["consumption"]})
-                    a.current_state["perception"].update({"consumption": 0})
-                else:           # not all needs are satisfied
-                    self.model.current_state["perception"].update({"production": 0})
-                    a.current_state["perception"].update({"consumption":perc_other["consumption"] - perc["production"]})
-            #else:
-            #    raise(AssertionError,"Invalid partner selected: types not matching")
+        a = self.model.partner_selection_orderbid()
+        other = self.model.model.schedule.agents
+        if a != None:
+            perc=a.current_state["perception"]
+            for other in other:
+                perc_other=other.current_state["perception"]
+                if self.model.current_state["type"] == "buyer" and a.current_state["type"] == "seller":
+                    self.model.current_state.update({"action": 0})  # buy
+                    a.current_state.update({"action": 1}) # sell
+                    if perc["consumption"] <= perc_other["production"]:
+                        a.current_state["perception"].update({"production":perc_other["production"]-perc["consumption"]})
+                        self.model.current_state["perception"].update({"consumption": 0})
+                        # allocate this remaining energy as surplus in second round
+                    else:           # not all needs are satisfied
+                        a.current_state["perception"].update({"production": 0})
+                        self.model.current_state["perception"].update({"consumption": perc["consumption"]-perc_other["production"]})
+                elif self.model.current_state["type"] == "seller" and a.current_state["type"] == "buyer":
+                    self.model.current_state.update({"action": 1})  # sell
+                    a.current_state.update({"action": 0}) # buy
+                    if perc["production"] >= perc_other["consumption"]:
+                        self.model.current_state["perception"].update({"production": perc["production"] - perc_other["consumption"]})
+                        a.current_state["perception"].update({"consumption": 0})
+                    else:           # not all needs are satisfied
+                        self.model.current_state["perception"].update({"production": 0})
+                        a.current_state["perception"].update({"consumption":perc_other["consumption"] - perc["production"]})
+                # else:
+                #     raise(AssertionError,"Invalid partner selected: types not matching")
         return self.model.current_state["action"] # TODO bring this action as a value of dictionary of decision for plots
 
     def get_feedback(self,perceptions,reward):

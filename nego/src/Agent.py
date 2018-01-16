@@ -40,18 +40,20 @@ class NegoAgent(BaseAgent):
                 if self.current_state["type"] != a.current_state["type"]:
                     # modify tariff rule: # of different types
                     self.current_state["partner"] = a
-        print(self.current_state)
+        #print(self.current_state)
+        print(self.current_state["partner"])
         return self.current_state["partner"] # TODO bring this partner as a value of dictionary of decision for plots
 
     def partner_selection_orderbid(self):
         other = self.model.schedule.agents
-        perc_other = other.current_state["perception"]
+        perc=self.current_state["perception"]
         sellers = []
         buyers = []
         for a in other:
+            a.seller_buyer()
+            perc_other = a.current_state["perception"]
             if a.current_state["type"] == "seller":
                 sellers.append({"agent":a,"agent_bid":perc_other["tariff"]})
-                print("1")
             elif a.current_state["type"] == "buyer":
                 buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) #ascending sorted sellers as bids
@@ -65,8 +67,11 @@ class NegoAgent(BaseAgent):
         for i in range(len(sorted_list)):
             x = sorted_list[i]["agent"]
             y = other_list[i]["agent"]
-            x.current_state["partner"] = y
+            x.current_state.update({"partner":y})
+            #print(x,y)
+        print(self.current_state["partner"])
         return self.current_state["partner"]
+
 
     # def transactions(self):
     #     if self.current_state["type"] == "seller":
