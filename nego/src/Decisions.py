@@ -26,7 +26,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        a = self.model.partner_selection()
+        a = self.model.partner_selection_orderbid()
         other = self.model.model.schedule.agents
         if a != None:
             perc=a.current_state["perception"]
@@ -53,7 +53,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
                         a.current_state["perception"].update({"consumption":perc_other["consumption"] - perc["production"]})
                 # else:
                 #     raise(AssertionError,"Invalid partner selected: types not matching")
-        #print(self.model.current_state["action"])
+        print(self.model.current_state["action"])
         return self.model.current_state["action"] # TODO bring this action as a value of dictionary of decision for plots
 
     def get_feedback(self,perceptions,reward):

@@ -69,7 +69,7 @@ class NegoAgent(BaseAgent):
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
             #print(x,y)
-        #print(self.current_state["partner"])
+        print(self, self.current_state["partner"])
         return self.current_state["partner"]
 
 
