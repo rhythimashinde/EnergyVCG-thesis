@@ -23,7 +23,7 @@ class BaseSupervisor(Model):
         self.measurement_fct=measurement_fct()
         self.decision_fct=decision_fct(self)
         self.reward_fct=reward_fct(self)
-        self.evaluation_fct=evaluation_fct()
+        self.evaluation_fct=evaluation_fct(self)
         self.agent_decision_fct=agent_decision_fct # keep it a class as it will be instanciated in the agent init
         self.agent_type=agent_type
         self.log=[]

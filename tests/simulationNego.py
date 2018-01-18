@@ -6,6 +6,7 @@ from nego.src.Decisions import NegoDecisionLogicAgent
 from nego.src.Decisions import NegoDecisionLogic
 from nego.src.RewardLogic import NegoRewardLogic
 from nego.src.MeasurementGen import NegoMeasurementGen
+from nego.src.Evaluation import  NegoEvaluationLogic
 from src.utils import *
 from nego.src.Agent import *
 from nego.src.Supervisor import *
@@ -19,6 +20,7 @@ def run_experiment(test,conf):
                              decision_fct=NegoDecisionLogic,
                              agent_decision_fct=NegoDecisionLogicAgent,
                              reward_fct=NegoRewardLogic,
+                             evaluation_fct=NegoEvaluationLogic,
                              agent_type=NegoAgent)
         model.run(conf["rep"],params=params)
         log_tot=log_tot+model.log # concatenate lists
@@ -29,8 +31,8 @@ def run_experiment(test,conf):
         stats_rew=get_stats(log_tot,"reward",idx=[varname])
         stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
         stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
-        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","cost","efficiency",
-                                                                      "social_welfare","success","tot_contrib"])
+        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare"])
+        #print(stats_eval)
         plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")

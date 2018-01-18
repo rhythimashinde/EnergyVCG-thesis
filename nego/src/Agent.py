@@ -83,14 +83,14 @@ class NegoAgent(BaseAgent):
         return self.current_state["cost"]
 
     def feedback(self,reward,timestep,perceptions=None):
-        print(self.current_state["agentID"],self.current_state["partner"])
+        #print(self.current_state["agentID"],self.current_state["partner"])
         super().feedback(reward,timestep,perceptions)
         #perc = self.current_state["perception"]
         #perc.update({"tariff":perc["tariff"]+1})
         reward_new = self.decision_fct.feedback(perceptions,reward)
         if reward_new["reward"] <= 0: #if there is no rewards in the system then the agent decides to have no partner
             self.current_state.update({"partner":None})
-        print(reward_new["reward"],self.current_state["agentID"],self.current_state["partner"])
+        #print(reward_new["reward"],self.current_state["agentID"],self.current_state["partner"])
 
     def perception(self,perceptions,population=[]):
         super().perception(perceptions,population=[])
