@@ -18,7 +18,8 @@ class NegoAgent(BaseAgent):
             cost: the cost of contribution
         """
         super().__init__(unique_id,model,decision_fct=decision_fct)
-        self.current_state={"perception":{"production":0,"consumption":0,"tariff":0},"partner":None,"action":0,"cost":0}
+        self.current_state={"perception":{"production":0,"consumption":0,"tariff":0},
+                            "partner":None,"action":0,"cost":0,"reward":0,"agentID":self.unique_id}
         #self.seller_buyer()
 
     def seller_buyer(self):
@@ -78,13 +79,18 @@ class NegoAgent(BaseAgent):
                 self.current_state.update({"cost":(self.current_state["perception"]["production"]-
                                                    self.current_state["perception"]["consumption"])/
                                                     self.current_state["perception"]["production"]})
-                print(self.current_state["cost"])
+                #print(self.current_state["cost"])
         return self.current_state["cost"]
 
     def feedback(self,reward,timestep,perceptions=None):
-        perc = self.current_state["perception"]
-        perc.update({"tariff":perc["tariff"]+1})
+        print(self.current_state["agentID"],self.current_state["partner"])
         super().feedback(reward,timestep,perceptions)
+        #perc = self.current_state["perception"]
+        #perc.update({"tariff":perc["tariff"]+1})
+        reward_new = self.decision_fct.feedback(perceptions,reward)
+        if reward_new["reward"] <= 0: #if there is no rewards in the system then the agent decides to have no partner
+            self.current_state.update({"partner":None})
+        print(reward_new["reward"],self.current_state["agentID"],self.current_state["partner"])
 
     def perception(self,perceptions,population=[]):
         super().perception(perceptions,population=[])

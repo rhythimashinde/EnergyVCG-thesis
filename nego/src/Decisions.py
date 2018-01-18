@@ -30,7 +30,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        a = self.model.partner_selection()
+        a = self.model.partner_selection_orderbid()
         other = self.model.model.schedule.agents
         cost = self.model.transactions()
         if a != None:
@@ -61,5 +61,17 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         #print(self.model.current_state["action"])
         return self.model.current_state["action"]
 
-    def get_feedback(self,perceptions,reward):
-        pass
+    def feedback(self,perceptions,reward):
+        cost = self.model.current_state["cost"]
+        partner = self.model.partner_selection_orderbid()
+        if partner != None:
+            cost_other = partner.current_state["cost"]
+        else:
+            cost_other = 0
+        rew = self.model.current_state["reward"]
+        if cost < cost_other: # if the cost is less than partner then rewards increase
+            rew.update({"reward":rew["reward"]+1})
+        else: # if the cost is more than partner then rewards reduce
+            rew.update({"reward":rew["reward"]-1})
+        #print(self.model.current_state["reward"])
+        return self.model.current_state["reward"]

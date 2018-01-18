@@ -19,4 +19,5 @@ class BaseDecisionLogic():
         return self.last_actions
 
     def feedback(self,perceptions,reward):
+        #print("2")
         pass
