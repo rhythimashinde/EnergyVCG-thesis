@@ -18,7 +18,7 @@ class NegoAgent(BaseAgent):
             cost: the cost of contribution
         """
         super().__init__(unique_id,model,decision_fct=decision_fct)
-        self.current_state={"perception":{"production":0,"consumption":0,"tariff":0},"partner":None,"action":0}
+        self.current_state={"perception":{"production":0,"consumption":0,"tariff":0},"partner":None,"action":0,"cost":0}
         #self.seller_buyer()
 
     def seller_buyer(self):
@@ -42,7 +42,7 @@ class NegoAgent(BaseAgent):
                     self.current_state["partner"] = a
         #print(self.current_state)
         #print(self.current_state["partner"])
-        return self.current_state["partner"] # TODO bring this partner as a value of dictionary of decision for plots
+        return self.current_state["partner"]
 
     def partner_selection_orderbid(self):
         other = self.model.schedule.agents
@@ -69,13 +69,16 @@ class NegoAgent(BaseAgent):
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
             #print(x,y)
-        print(self, self.current_state["partner"])
+        #print(self, self.current_state["partner"])
         return self.current_state["partner"]
 
-
-    # def transactions(self):
-    #     if self.current_state["type"] == "seller":
-    #         return 1  # modify this cost with every transaction
+    def transactions(self):
+        if self.current_state["type"] == "seller":
+            if self.current_state["perception"]["production"] != 0:
+                self.current_state.update({"cost":(self.current_state["perception"]["production"]-
+                                                   self.current_state["perception"]["consumption"])/
+                                                    self.current_state["perception"]["production"]})
+        return self.current_state["cost"]
 
     def feedback(self,reward,timestep,perceptions=None):
         perc = self.current_state["perception"]
