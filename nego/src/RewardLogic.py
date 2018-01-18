@@ -10,4 +10,9 @@ class NegoRewardLogic(BaseRewardLogic):
         """
         Returns a list of dictionaries containing the reward (float) for each agent
         """
-        return [{"reward":0}]*len(decisions)
+        actions = [a.current_state["action"] for a in self.model.schedule.agents]
+        rewards = [0]*len(actions)
+        for i in range(len(actions)):
+            rewards[i] = actions[i]*2 # seller has double rewards than buyer
+        #print(actions,rewards)
+        return [{"reward":r} for r in rewards]

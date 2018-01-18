@@ -56,9 +56,9 @@ class NegoAgent(BaseAgent):
                 sellers.append({"agent":a,"agent_bid":perc_other["tariff"]})
             elif a.current_state["type"] == "buyer":
                 buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
-        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) #ascending sorted sellers as bids
-        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) #descending sorted buyers as bids
-        if len(sellers_sorted)<=len(buyers_sorted): #the remaining energy is wasted
+        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) # ascending sorted sellers as bids
+        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) # descending sorted buyers as bids
+        if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
             sorted_list = sellers_sorted
             other_list = buyers_sorted
         else:
@@ -78,6 +78,7 @@ class NegoAgent(BaseAgent):
                 self.current_state.update({"cost":(self.current_state["perception"]["production"]-
                                                    self.current_state["perception"]["consumption"])/
                                                     self.current_state["perception"]["production"]})
+                print(self.current_state["cost"])
         return self.current_state["cost"]
 
     def feedback(self,reward,timestep,perceptions=None):

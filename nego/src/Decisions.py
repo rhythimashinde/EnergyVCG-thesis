@@ -20,7 +20,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
                             "new_production":a.current_state["perception"]["production"],
                             "new_consumption":a.current_state["perception"]["consumption"]}
                            for a,p in zip(self.model.schedule.agents,perceptions)]
-        print(self.last_actions)
+        #print(self.last_actions)
         return self.last_actions
 
 class NegoDecisionLogicAgent(BaseDecisionLogic):
@@ -30,16 +30,16 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        cost = self.model.transactions()
         a = self.model.partner_selection()
         other = self.model.model.schedule.agents
+        cost = self.model.transactions()
         if a != None:
             perc=a.current_state["perception"]
             for other in other:
                 perc_other=other.current_state["perception"]
                 if self.model.current_state["type"] == "buyer" and a.current_state["type"] == "seller":
-                    self.model.current_state.update({"action": 0})  # buy
-                    a.current_state.update({"action": 1}) # sell
+                    self.model.current_state.update({"action": 1})  # buy
+                    a.current_state.update({"action": 2}) # sell
                     if perc["consumption"] <= perc_other["production"]:
                         a.current_state["perception"].update({"production":perc_other["production"]-perc["consumption"]})
                         self.model.current_state["perception"].update({"consumption": 0})
@@ -48,8 +48,8 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
                         a.current_state["perception"].update({"production": 0})
                         self.model.current_state["perception"].update({"consumption": perc["consumption"]-perc_other["production"]})
                 elif self.model.current_state["type"] == "seller" and a.current_state["type"] == "buyer":
-                    self.model.current_state.update({"action": 1})  # sell
-                    a.current_state.update({"action": 0}) # buy
+                    self.model.current_state.update({"action": 2})  # sell
+                    a.current_state.update({"action": 1}) # buy
                     if perc["production"] >= perc_other["consumption"]:
                         self.model.current_state["perception"].update({"production": perc["production"] - perc_other["consumption"]})
                         a.current_state["perception"].update({"consumption": 0})
