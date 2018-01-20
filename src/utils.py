@@ -172,15 +172,15 @@ def plot_trend(df,xname,filename,trends=None):
     #     ax.set_ylim(ylim)
     for y in trends:
         ax.plot(x,df[y+"_mean"],label=y)
-        ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),
-                        np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
+        ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
     fig.legend()
-    fig.savefig(filename,format='png')
+    fig.savefig(filename,format='pdf')
     plt.close(fig)
 
 def plot_measures(df,xname,filename,trends=None):
     fig=plt.figure()
-    for measures,ylim,i in [[["social_welfare"],None,1]]:
+    for measures,ylim,i in [[["efficiency","success","gini"],[0,1],0]
+                            ,[["cost","social_welfare","tot_contrib"],None,1]]:
         ax = fig.add_subplot(121+i)
         x=df[xname]
         ax.set_xlabel(xname)
@@ -190,10 +190,9 @@ def plot_measures(df,xname,filename,trends=None):
     #     ax.set_ylim(ylim)
         for y in measures:
             ax.plot(x,df[y+"_mean"],label=y)
-            ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),
-                            np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
+            ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
         ax.legend()
-    fig.savefig(filename,format='png')
+    fig.savefig(filename,format='pdf')
     plt.close(fig)
 
 def expandgrid(dct):

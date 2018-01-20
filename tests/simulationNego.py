@@ -7,7 +7,7 @@ from nego.src.Decisions import NegoDecisionLogic
 from nego.src.RewardLogic import NegoRewardLogic
 from nego.src.MeasurementGen import NegoMeasurementGen
 from nego.src.Evaluation import  NegoEvaluationLogic
-from src.utils import *
+from nego.src.utilsnego import *
 from nego.src.Agent import *
 from nego.src.Supervisor import *
 
@@ -31,13 +31,11 @@ def run_experiment(test,conf):
         stats_rew=get_stats(log_tot,"reward",idx=[varname])
         stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
         stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
-        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare"])
-        #print(stats_eval)
+        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","gini","success","efficiency"])
         plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
-
 
 class RewardLogicFull(NegoRewardLogic):
     def __init__(self, *args, **kwargs):
@@ -52,7 +50,7 @@ class RewardLogicFull(NegoRewardLogic):
         percs=np.sum([p["value"] for p in self.model.current_state["perception"]])
         thresh=np.random.uniform(percs*0.8,percs) # almost full contrib
         contribs=np.sum([d["contribution"] for d in decisions])
-        outcome=success(thresh,np.sum(contribs))
+        outcome=success_nego(thresh,np.sum(contribs))
         if outcome==1:
             costs=np.array([d["cost"] for d in decisions])
             ret=-costs+self.benefit
@@ -79,7 +77,7 @@ class RewardLogicUniform(NegoRewardLogic):
         #     print("success "+str(thresh)+" "+str(contribs))
         # else:
         #     print("insuccess "+str(thresh)+" "+str(contribs))
-        outcome=success(thresh,np.sum(contribs))
+        outcome=success_nego(thresh,np.sum(contribs))
         if outcome==1:
             costs=np.array([d["cost"] for d in decisions])
             ret=-costs+self.benefit
@@ -143,8 +141,8 @@ class MeasurementGenNormal(NegoMeasurementGen):
         """
         ret=[{"production":np.random.normal(loc=self.mu,scale=self.s),
               "consumption":np.random.normal(loc=self.mu,scale=self.s),
-              "timestep":timestep,"agentID":i,
-              "tariff":np.random.uniform(low=0,high=5)} for i in range(len(population))]
+              "timestep":timestep,"agentID":i,"tariff":np.random.uniform(low=0,high=5)}
+             for i in range(len(population))]
         return ret
 
 class MeasurementGenBinomial(NegoMeasurementGen):
@@ -155,6 +153,7 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         self.mu2=kwargs["mu2"]
         self.s2=1
         self.sep=kwargs["rich"]
+        self.biased=kwargs["bias"] #proportion of biased agents
 
     def get_measurements(self,population,timestep):
         """
@@ -167,7 +166,9 @@ class MeasurementGenBinomial(NegoMeasurementGen):
                        if i>len(population)*self.sep else
                        np.random.normal(loc=self.mu2,scale=self.s2)),
               "tariff":np.random.uniform(low=0,high=5),
-              "cost":0,"timestep":timestep,"agentID":i}
+              "social_type": np.random.randint(1,3),
+              "biased":(0 if i>len(population)*self.biased else 1),
+              "cost":0,"timestep":timestep,"agentID":i} #high class is 2, low class is 1
              for i in range(len(population))]
         return ret
 
@@ -176,7 +177,7 @@ if __name__ == '__main__':
     #        "binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},
     #                    "meas_fct":MeasurementGenBinomial}}
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
-    tests={"binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},
-                       "meas_fct":MeasurementGenBinomial}}
+    tests={"binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8],
+                       "bias":[0.2,0.5,0.8]}, "meas_fct":MeasurementGenBinomial}}
     for test,conf in tests.items():
         run_experiment(test,conf)

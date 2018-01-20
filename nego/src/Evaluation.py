@@ -24,7 +24,27 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         # return [{"gini":gini(values),
         #         "efficiency":efficiency(self.model.N,tc),
         #         "tot_contrib":tc}]
+        actions = [a.current_state["action"] for a in self.model.schedule.agents]
         N = self.model.N
         costs = [a.current_state["cost"] for a in self.model.schedule.agents]
         rewards = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents]
-        return [{"social_welfare":social_welfare(costs,rewards,N)}]
+        tot_agents = 0
+        production_tot = 0
+        consumption_met = 0
+        for a in self.model.schedule.agents:
+            if a.current_state["partner"] != None:
+                tot_agents = tot_agents + 1
+                if a.current_state["type"] == "seller":
+                    partner = a.current_state["partner"]
+                    produce = a.current_state["perception"]["production"]
+                    consume = partner.current_state["perception"]["consumption"]
+                    if a.current_state["perception"]["production"] >= partner.current_state["perception"]["consumption"]:
+                        # if the consumption is more and the seller is able to meet only a limited consumption,
+                        # then the consumption met would be equivalent to the production available by seller
+                        production_tot = production_tot + produce
+                        consumption_met = consumption_met + consume
+                    else:
+                        production_tot = production_tot + produce
+                        consumption_met = consumption_met + produce
+        return [{"social_welfare":social_welfare(costs,rewards,N),"gini":gini(actions),
+                 "success":success_nego(N,tot_agents),"efficiency":efficiency_nego(consumption_met,production_tot)}]

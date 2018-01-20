@@ -18,7 +18,7 @@ class NegoAgent(BaseAgent):
             cost: the cost of contribution
         """
         super().__init__(unique_id,model,decision_fct=decision_fct)
-        self.current_state={"perception":{"production":0,"consumption":0,"tariff":0},
+        self.current_state={"perception":{"production":0,"consumption":0,"tariff":0,"social_type":0},
                             "partner":None,"action":0,"cost":0,"reward":0,"agentID":self.unique_id}
         #self.seller_buyer()
 

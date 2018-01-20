@@ -17,8 +17,8 @@ class NegoDecisionLogic(BaseDecisionLogic):
                             "consumption":p["consumption"],"agentID":a.unique_id,
                             "contribution":0,"contributed":False,"cost":a.current_state["cost"],
                             "action":a.current_state["action"],"partner":a.current_state["partner"],
-                            "new_production":a.current_state["perception"]["production"],
-                            "new_consumption":a.current_state["perception"]["consumption"]}
+                            "social_type":p["social_type"],"new_production":a.current_state["perception"]["production"],
+                            "biased":p["biased"],"new_consumption":a.current_state["perception"]["consumption"]}
                            for a,p in zip(self.model.schedule.agents,perceptions)]
         #print(self.last_actions)
         return self.last_actions
@@ -37,27 +37,31 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             perc=a.current_state["perception"]
             for other in other:
                 perc_other=other.current_state["perception"]
-                if self.model.current_state["type"] == "buyer" and a.current_state["type"] == "seller":
-                    self.model.current_state.update({"action": 1})  # buy
-                    a.current_state.update({"action": 2}) # sell
-                    if perc["consumption"] <= perc_other["production"]:
-                        a.current_state["perception"].update({"production":perc_other["production"]-perc["consumption"]})
-                        self.model.current_state["perception"].update({"consumption": 0})
+                if self.model.current_state["perception"]["biased"] == 0 \
+                        or (self.model.current_state["perception"]["biased"] == 1
+                            and self.model.current_state["perception"]["social_type"] == a.current_state["perception"]["social_type"]):
+                    # only if buyer is not biased transaction would happen or if biased and has an allocated partner as the same caste
+                    if self.model.current_state["type"] == "buyer" and a.current_state["type"] == "seller":
+                        self.model.current_state.update({"action": 1})  # buy
+                        a.current_state.update({"action": 2}) # sell
+                        if perc["consumption"] <= perc_other["production"]:
+                            a.current_state["perception"].update({"production":perc_other["production"]-perc["consumption"]})
+                            self.model.current_state["perception"].update({"consumption": 0})
                         # allocate this remaining energy as surplus in second round
-                    else:           # not all needs are satisfied
-                        a.current_state["perception"].update({"production": 0})
-                        self.model.current_state["perception"].update({"consumption": perc["consumption"]-perc_other["production"]})
-                elif self.model.current_state["type"] == "seller" and a.current_state["type"] == "buyer":
-                    self.model.current_state.update({"action": 2})  # sell
-                    a.current_state.update({"action": 1}) # buy
-                    if perc["production"] >= perc_other["consumption"]:
-                        self.model.current_state["perception"].update({"production": perc["production"] - perc_other["consumption"]})
-                        a.current_state["perception"].update({"consumption": 0})
-                    else:           # not all needs are satisfied
-                        self.model.current_state["perception"].update({"production": 0})
-                        a.current_state["perception"].update({"consumption":perc_other["consumption"] - perc["production"]})
-                # else:
-                #     raise(AssertionError,"Invalid partner selected: types not matching")
+                        else:           # not all needs are satisfied
+                            a.current_state["perception"].update({"production": 0})
+                            self.model.current_state["perception"].update({"consumption": perc["consumption"]-perc_other["production"]})
+                    elif self.model.current_state["type"] == "seller" and a.current_state["type"] == "buyer":
+                        self.model.current_state.update({"action": 2})  # sell
+                        a.current_state.update({"action": 1}) # buy
+                        if perc["production"] >= perc_other["consumption"]:
+                            self.model.current_state["perception"].update({"production": perc["production"] - perc_other["consumption"]})
+                            a.current_state["perception"].update({"consumption": 0})
+                        else:           # not all needs are satisfied
+                            self.model.current_state["perception"].update({"production": 0})
+                            a.current_state["perception"].update({"consumption":perc_other["consumption"] - perc["production"]})
+                    # else:
+                    #     raise(AssertionError,"Invalid partner selected: types not matching")
         #print(self.model.current_state["action"])
         return self.model.current_state["action"]
 
