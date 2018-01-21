@@ -13,17 +13,19 @@ from nego.src.Supervisor import *
 
 def run_experiment(test,conf):
     log_tot=[]
-    for idx,r in expandgrid(conf["params"]).iterrows():
-        params=r.to_dict()
-        f=functools.partial(conf["meas_fct"],**params)
-        model=BaseSupervisor(conf["N"],measurement_fct=f,
-                             decision_fct=NegoDecisionLogic,
-                             agent_decision_fct=NegoDecisionLogicAgent,
-                             reward_fct=NegoRewardLogic,
-                             evaluation_fct=NegoEvaluationLogic,
-                             agent_type=NegoAgent)
-        model.run(conf["rep"],params=params)
-        log_tot=log_tot+model.log # concatenate lists
+    for r in range(conf["reps"]):
+        for idx,p in expandgrid(conf["params"]).iterrows():
+            params=p.to_dict()
+            params.update({"repetition":r})
+            f=functools.partial(conf["meas_fct"],**params)
+            model=BaseSupervisor(N=int(params["N"]),measurement_fct=f,
+                                 decision_fct=conf["dec_fct"],
+                                 agent_decision_fct=conf["dec_fct_agent"],
+                                 reward_fct=conf["rew_fct"],
+                                 evaluation_fct=conf["eval_fct"],
+                                 agent_type=NegoAgent)
+            model.run(conf["T"],params=params)
+            log_tot=log_tot+model.log # concatenate lists
     #print(log_tot)
     # compute statistics for all tables in log file
     varnames=[k for k,v in conf["params"].items() if len(v)>1] # keep vars for which there is more than one value
@@ -177,7 +179,10 @@ if __name__ == '__main__':
     #        "binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},
     #                    "meas_fct":MeasurementGenBinomial}}
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
-    tests={"binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8],
-                       "bias":[0.2,0.5,0.8]}, "meas_fct":MeasurementGenBinomial}}
+    tests={"binomial":{"T":3,"reps":10,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+                       "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+                       "params":{"N":[5,10,20],"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8],"bias":[0.2,0.5,0.8]},
+                       "meas_fct":MeasurementGenBinomial}}
     for test,conf in tests.items():
         run_experiment(test,conf)
+        print("success")
