@@ -155,32 +155,34 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         self.s1=1
         self.mu2=kwargs["mu2"]
         self.s2=1
-        self.sep=kwargs["rich"]
+        self.produce_low = kwargs["buy_low"] # proportion of agents who can produce in lower caste
+        self.produce_high = kwargs["buy_high"] # proportion of agents who can produce in higher caste
+        self.caste=kwargs["low_caste"] # proportion of agents in low caste
         self.biased=kwargs["bias"]  # proportion of biased agents
 
     def get_measurements(self,population,timestep):
         """
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
-        with open('all.csv') as csvfile:
+        #TODO add this in run_experiment to make it more general and applicable for all classes
+        with open('tariff.csv') as csvfile:
             has_header = csv.Sniffer().sniff(csvfile.readline())
             csvfile.seek(0)
             readCSV = csv.DictReader(csvfile)
             if has_header:
                 next(readCSV)
             data = [row for row in readCSV]
-            # for row in readCSV:
             tariff = data[timestep]["inrpriceperkwh"]
-            print(tariff)
             tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
-            ret=[{"consumption":(np.random.normal(loc=self.mu1,scale=self.s1)
-                           if i>len(population)*self.sep else
-                           np.random.normal(loc=self.mu2,scale=self.s2)),
-                  "production":(np.random.normal(loc=self.mu1,scale=self.s1)
-                           if i>len(population)*self.sep else
-                           np.random.normal(loc=self.mu2,scale=self.s2)),
+            production = np.random.uniform(20000,100000)*8/24/20000
+            ret=[{"consumption":(np.random.normal(loc=self.mu2,scale=self.s1)
+                           if i>len(population)*self.caste else
+                           np.random.normal(loc=self.mu1,scale=self.s2)),
                   "tariff":tariff_new,
-                  "social_type": np.random.randint(1,3),
+                  "social_type":(2 if i>len(population)*self.caste else 1),
+                  "production":((0 if i>len(population)*self.caste*self.produce_high else production)
+                                if i>len(population)*self.caste else
+                                (0 if i>len(population)*self.caste*self.produce_low else production)),
                   "biased":(0 if i>len(population)*self.biased else 1),
                   "cost":0,"timestep":timestep,"agentID":i}  # high class is 2, low class is 1
                  for i in range(len(population))]
@@ -188,13 +190,13 @@ class MeasurementGenBinomial(NegoMeasurementGen):
 
 if __name__ == '__main__':
     # tests={"uniform":{"N":10,"rep":10,"params":{"mu":[5,20,50]},"meas_fct":MeasurementGenNormal},
-    #        "binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],"rich":[0.2,0.5,0.8]},
+    #        "binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],
     #                    "meas_fct":MeasurementGenBinomial}}
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
-    tests={"binomial":{"T":23,"reps":2,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    tests={"binomial":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[20,50,100],"mu1":[1],"mu2":[5,10,20],"rich":[0.2,0.5,0.8],"bias":[0.2,0.5,0.8]},
+                       "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias":[0.2,0.5,0.8],
+                                 "low_caste":[0.36,0.5,0.8],"buy_low":[0.25],"buy_high":[0.48]},
                        "meas_fct":MeasurementGenBinomial}}
     for test,conf in tests.items():
         run_experiment(test,conf)
-        print("success")
