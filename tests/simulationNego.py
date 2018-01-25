@@ -162,27 +162,29 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         """
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
-        with open('tariff.csv') as csvfile:
+        with open('all.csv') as csvfile:
             has_header = csv.Sniffer().has_header(csvfile.read(1024))
             csvfile.seek(0)
             readCSV = csv.reader(csvfile,delimiter = ',')
             if has_header:
                 next(readCSV)
-            for row in readCSV:
-                tariff = row[2]
-                tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
-                ret=[{"consumption":(np.random.normal(loc=self.mu1,scale=self.s1)
-                               if i>len(population)*self.sep else
-                               np.random.normal(loc=self.mu2,scale=self.s2)),
-                      "production":(np.random.normal(loc=self.mu1,scale=self.s1)
-                               if i>len(population)*self.sep else
-                               np.random.normal(loc=self.mu2,scale=self.s2)),
-                      "tariff":tariff_new,
-                      "social_type": np.random.randint(1,3),
-                      "biased":(0 if i>len(population)*self.biased else 1),
-                      "cost":0,"timestep":timestep,"agentID":i} #high class is 2, low class is 1
-                     for i in range(len(population))]
-                return ret
+            data = [row for row in readCSV]
+            # for row in readCSV:
+            tariff = data[timestep][2]
+            print(tariff)
+            tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
+            ret=[{"consumption":(np.random.normal(loc=self.mu1,scale=self.s1)
+                           if i>len(population)*self.sep else
+                           np.random.normal(loc=self.mu2,scale=self.s2)),
+                  "production":(np.random.normal(loc=self.mu1,scale=self.s1)
+                           if i>len(population)*self.sep else
+                           np.random.normal(loc=self.mu2,scale=self.s2)),
+                  "tariff":tariff_new,
+                  "social_type": np.random.randint(1,3),
+                  "biased":(0 if i>len(population)*self.biased else 1),
+                  "cost":0,"timestep":timestep,"agentID":i}  # high class is 2, low class is 1
+                 for i in range(len(population))]
+            return ret
 
 if __name__ == '__main__':
     # tests={"uniform":{"N":10,"rep":10,"params":{"mu":[5,20,50]},"meas_fct":MeasurementGenNormal},
@@ -191,7 +193,7 @@ if __name__ == '__main__':
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
     tests={"binomial":{"T":23,"reps":2,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[5,10,20],"mu1":[1],"mu2":[5,10,20],"rich":[0.2,0.5,0.8],"bias":[0.2,0.5,0.8]},
+                       "params":{"N":[20,50,100],"mu1":[1],"mu2":[5,10,20],"rich":[0.2,0.5,0.8],"bias":[0.2,0.5,0.8]},
                        "meas_fct":MeasurementGenBinomial}}
     for test,conf in tests.items():
         run_experiment(test,conf)
