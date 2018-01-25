@@ -163,14 +163,14 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
         with open('all.csv') as csvfile:
-            has_header = csv.Sniffer().has_header(csvfile.read(1024))
+            has_header = csv.Sniffer().sniff(csvfile.readline())
             csvfile.seek(0)
-            readCSV = csv.reader(csvfile,delimiter = ',')
+            readCSV = csv.DictReader(csvfile)
             if has_header:
                 next(readCSV)
             data = [row for row in readCSV]
             # for row in readCSV:
-            tariff = data[timestep][2]
+            tariff = data[timestep]["inrpriceperkwh"]
             print(tariff)
             tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
             ret=[{"consumption":(np.random.normal(loc=self.mu1,scale=self.s1)
