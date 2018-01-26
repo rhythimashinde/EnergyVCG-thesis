@@ -30,7 +30,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        a = self.model.partner_selection_orderbid()
+        a = self.model.partner_selection_orderbid_bidsplit()
         other = self.model.model.schedule.agents
         cost = self.model.transactions()
         if a != None:

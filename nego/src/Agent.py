@@ -25,7 +25,7 @@ class NegoAgent(BaseAgent):
     def seller_buyer(self):
         state=self.current_state["perception"]
         #print(state)
-        if state["production"] > state["consumption"]:
+        if state["production"] > state["consumption"] and state["production"]!=0:
             self.current_state.update({"type":"seller"})
         if state["production"] < state["consumption"]:
             self.current_state.update({"type":"buyer"})
@@ -57,6 +57,43 @@ class NegoAgent(BaseAgent):
                 sellers.append({"agent":a,"agent_bid":perc_other["tariff"]})
             elif a.current_state["type"] == "buyer":
                 buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
+        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) # ascending sorted sellers as bids
+        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) # descending sorted buyers as bids
+        if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
+            sorted_list = sellers_sorted
+            other_list = buyers_sorted
+        else:
+            sorted_list = buyers_sorted
+            other_list = sellers_sorted
+        for i in range(len(sorted_list)):
+            x = sorted_list[i]["agent"]
+            y = other_list[i]["agent"]
+            x.current_state.update({"partner":y})
+            #print(x,y)
+        #print(self, self.current_state["partner"])
+        return self.current_state["partner"]
+
+    def partner_selection_orderbid_bidsplit(self):
+        other = self.model.schedule.agents
+        perc=self.current_state["perception"]
+        sellers = []
+        buyers = []
+        for a in other:
+            a.seller_buyer()
+            perc_other = a.current_state["perception"]
+            if a.current_state["type"] == "seller":
+                sellers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                                "produce":a.current_state["perception"]["production"]})
+            elif a.current_state["type"] == "buyer":
+                buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
+        if not sellers:
+            pass
+        else:
+            produce_smallest = min (sellers[i]["produce"] for i in range(len(sellers)) if sellers[i]["produce"]>0)
+            # get smallest element of produce greater than 0
+            for i in range(len(sellers)):
+                sellers[i]["produce"] =round((sellers[i]["produce"]/produce_smallest),0)
+                # obtained bids splitted in almost equal chunks
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) # ascending sorted sellers as bids
         buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) # descending sorted buyers as bids
         if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted

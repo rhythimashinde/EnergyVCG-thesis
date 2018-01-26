@@ -158,7 +158,8 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         self.produce_low = kwargs["buy_low"] # proportion of agents who can produce in lower caste
         self.produce_high = kwargs["buy_high"] # proportion of agents who can produce in higher caste
         self.caste=kwargs["low_caste"] # proportion of agents in low caste
-        self.biased=kwargs["bias"]  # proportion of biased agents
+        self.biased_low=kwargs["bias_low"]  # proportion of biased agents among low caste
+        self.biased_high = kwargs["bias_high"] # proportion of biased agents among low caste
 
     def get_measurements(self,population,timestep):
         """
@@ -183,7 +184,9 @@ class MeasurementGenBinomial(NegoMeasurementGen):
                   "production":((0 if i>len(population)*self.caste*self.produce_high else production)
                                 if i>len(population)*self.caste else
                                 (0 if i>len(population)*self.caste*self.produce_low else production)),
-                  "biased":(0 if i>len(population)*self.biased else 1),
+                  "biased":((0 if i>len(population)*self.caste*self.biased_high else 1)
+                            if i>len(population)*self.caste else
+                            (0 if i>len(population)*self.caste*self.biased_low else 1)),
                   "cost":0,"timestep":timestep,"agentID":i}  # high class is 2, low class is 1
                  for i in range(len(population))]
             return ret
@@ -195,8 +198,9 @@ if __name__ == '__main__':
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
     tests={"binomial":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias":[0.2,0.5,0.8],
-                                 "low_caste":[0.36,0.5,0.8],"buy_low":[0.25],"buy_high":[0.48]},
+                       "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+                                 "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],
+                                 "buy_low":[0.25],"buy_high":[0.48]},
                        "meas_fct":MeasurementGenBinomial}}
     for test,conf in tests.items():
         run_experiment(test,conf)
