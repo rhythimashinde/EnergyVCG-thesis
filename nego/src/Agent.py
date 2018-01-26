@@ -85,7 +85,8 @@ class NegoAgent(BaseAgent):
                 sellers.append({"agent":a,"agent_bid":perc_other["tariff"],
                                 "produce":a.current_state["perception"]["production"]})
             elif a.current_state["type"] == "buyer":
-                buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
+                buyers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                               "consume":a.current_state["perception"]["consumption"]})
         if not sellers:
             pass
         else:
@@ -93,7 +94,15 @@ class NegoAgent(BaseAgent):
             # get smallest element of produce greater than 0
             for i in range(len(sellers)):
                 sellers[i]["produce"] =round((sellers[i]["produce"]/produce_smallest),0)
-                # obtained bids splitted in almost equal chunks
+                # obtained bids splitted in almost equal chunks of production
+        if not buyers:
+            pass
+        else:
+            consume_smallest = min (buyers[i]["consume"] for i in range(len(buyers)) if buyers[i]["consume"]>0)
+            # get smallest element of consumption greater than 0
+            for i in range(len(buyers)):
+                buyers[i]["consume"] =round((buyers[i]["consume"]/consume_smallest),0)
+                # obtained bids splitted in almost equal chunks of consumption
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) # ascending sorted sellers as bids
         buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) # descending sorted buyers as bids
         if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
