@@ -176,7 +176,7 @@ class MeasurementGenBinomial(NegoMeasurementGen):
             tariff = data[timestep]["inrpriceperkwh"]
             tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
             production = np.random.uniform(20000,100000)*8/24/20000
-            ret=[{"consumption":(np.random.normal(loc=self.mu2,scale=self.s1)
+            ret=[{"consumption":abs(np.random.normal(loc=self.mu2,scale=self.s1)
                            if i>len(population)*self.caste else
                            np.random.normal(loc=self.mu1,scale=self.s2)),
                   "tariff":tariff_new,
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     #        "binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],
     #                    "meas_fct":MeasurementGenBinomial}}
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
-    tests={"binomial":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    tests={"binomial":{"T":2,"reps":5,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
                        "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
                                  "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],

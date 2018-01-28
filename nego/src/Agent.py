@@ -20,16 +20,13 @@ class NegoAgent(BaseAgent):
         super().__init__(unique_id,model,decision_fct=decision_fct)
         self.current_state={"perception":{"production":0,"consumption":0,"tariff":0,"social_type":0},
                             "partner":None,"action":0,"cost":0,"reward":0,"agentID":self.unique_id}
-        #self.seller_buyer()
 
     def seller_buyer(self):
         state=self.current_state["perception"]
-        #print(state)
         if state["production"] > state["consumption"] and state["production"]!=0:
             self.current_state.update({"type":"seller"})
-        if state["production"] < state["consumption"]:
+        if state["production"] < state["consumption"] and state["consumption"]!=0:
             self.current_state.update({"type":"buyer"})
-        #print(self.current_state)
 
     def partner_selection(self):
         other = self.model.schedule.agents
@@ -41,8 +38,6 @@ class NegoAgent(BaseAgent):
                 if self.current_state["type"] != a.current_state["type"]:
                     # modify tariff rule: # of different types
                     self.current_state["partner"] = a
-        #print(self.current_state)
-        #print(self.current_state["partner"])
         return self.current_state["partner"]
 
     def partner_selection_orderbid(self):
@@ -69,11 +64,10 @@ class NegoAgent(BaseAgent):
             x = sorted_list[i]["agent"]
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
-            #print(x,y)
-        #print(self, self.current_state["partner"])
         return self.current_state["partner"]
 
     def partner_selection_orderbid_bidsplit(self):
+        #TODO do I need to move this generalised part to the supervisor? Or just do that for mediated negotiation
         other = self.model.schedule.agents
         perc=self.current_state["perception"]
         sellers = []
@@ -94,15 +88,19 @@ class NegoAgent(BaseAgent):
             # get smallest element of produce greater than 0
             for i in range(len(sellers)):
                 sellers[i]["produce"] =round((sellers[i]["produce"]/produce_smallest),0)
-                # obtained bids splitted in almost equal chunks of production
+                for a in other:
+                    if sellers[i]["agent"] == a:
+                        a.current_state["perception"].update({"production":sellers[i]["produce"]})
         if not buyers:
             pass
         else:
             consume_smallest = min (buyers[i]["consume"] for i in range(len(buyers)) if buyers[i]["consume"]>0)
             # get smallest element of consumption greater than 0
             for i in range(len(buyers)):
-                buyers[i]["consume"] =round((buyers[i]["consume"]/consume_smallest),0)
-                # obtained bids splitted in almost equal chunks of consumption
+                buyers[i]["consume"] = round((buyers[i]["consume"]/consume_smallest),0)
+                for a in other:
+                    if buyers[i]["agent"] == a:
+                        a.current_state["perception"].update({"consumption":buyers[i]["consume"]})
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) # ascending sorted sellers as bids
         buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) # descending sorted buyers as bids
         if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
@@ -115,8 +113,6 @@ class NegoAgent(BaseAgent):
             x = sorted_list[i]["agent"]
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
-            #print(x,y)
-        #print(self, self.current_state["partner"])
         return self.current_state["partner"]
 
     def transactions(self):
@@ -125,18 +121,13 @@ class NegoAgent(BaseAgent):
                 self.current_state.update({"cost":(self.current_state["perception"]["production"]-
                                                    self.current_state["perception"]["consumption"])/
                                                     self.current_state["perception"]["production"]})
-                #print(self.current_state["cost"])
         return self.current_state["cost"]
 
     def feedback(self,reward,timestep,perceptions=None):
-        #print(self.current_state["agentID"],self.current_state["partner"])
         super().feedback(reward,timestep,perceptions)
-        #perc = self.current_state["perception"]
-        #perc.update({"tariff":perc["tariff"]+1})
         reward_new = self.decision_fct.feedback(perceptions,reward)
         if reward_new["reward"] <= 0: #if there is no rewards in the system then the agent decides to have no partner
             self.current_state.update({"partner":None})
-        #print(reward_new["reward"],self.current_state["agentID"],self.current_state["partner"])
 
     def perception(self,perceptions,population=[]):
         super().perception(perceptions,population=[])
