@@ -81,7 +81,7 @@ class NegoAgent(BaseAgent):
             elif a.current_state["type"] == "buyer":
                 buyers.append({"agent":a,"agent_bid":perc_other["tariff"],
                                "consume":a.current_state["perception"]["consumption"]})
-        if not sellers:
+        if not sellers or all(sellers[i]["produce"] == 0 for i in range(len(sellers))):
             pass
         else:
             produce_smallest = min (sellers[i]["produce"] for i in range(len(sellers)) if sellers[i]["produce"]>0)
@@ -91,7 +91,7 @@ class NegoAgent(BaseAgent):
                 for a in other:
                     if sellers[i]["agent"] == a:
                         a.current_state["perception"].update({"production":sellers[i]["produce"]})
-        if not buyers:
+        if not buyers or all(buyers[i]["consume"] == 0 for i in range(len(buyers))):
             pass
         else:
             consume_smallest = min (buyers[i]["consume"] for i in range(len(buyers)) if buyers[i]["consume"]>0)
