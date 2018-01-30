@@ -65,6 +65,7 @@ class NegoAgent(BaseAgent):
             x = sorted_list[i]["agent"]
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
+        #print(self.current_state["reward"])
         return self.current_state["partner"]
 
     def partner_selection_orderbid_bidsplit(self):
@@ -119,9 +120,8 @@ class NegoAgent(BaseAgent):
     def transactions(self):
         if self.current_state["type"] == "seller":
             if self.current_state["perception"]["production"] != 0:
-                self.current_state.update({"cost":(self.current_state["perception"]["production"]-
-                                                   self.current_state["perception"]["consumption"])/
-                                                    self.current_state["perception"]["production"]})
+                self.current_state.update({"cost":self.current_state["perception"]["production"]*
+                                                  self.current_state["perception"]["main_cost"]})
         return self.current_state["cost"]
 
     def feedback(self,reward,timestep,perceptions=None):

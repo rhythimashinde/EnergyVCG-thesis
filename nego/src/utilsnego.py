@@ -52,7 +52,7 @@ def market_access(tot_agents_poor,tot_transactions_poor):
         as per the number of agents getting partners
     """
     #print("success=",(tot_transactions*2-tot_agents)/tot_agents)
-    return ((tot_agents_poor-tot_transactions_poor*2)/tot_agents_poor)
+    return ((tot_agents_poor-tot_transactions_poor*2)/tot_agents_poor if tot_agents_poor != 0 else 0)
 
 def fairness(measurements,decisions,N):
     """
@@ -86,10 +86,10 @@ def social_welfare(costs,rewards,N):
     if len(rewards)>N:
         rewards = rewards[(len(rewards)-N):]
     assert(len(costs)==len(rewards))
-    #print ("social_welfare=",np.mean(np.array(costs)-np.array(rewards)))
+    # print ("social_welfare=",np.mean(np.array(costs)-np.array(rewards)))
     s = np.mean(np.array(rewards))-np.mean(np.array(costs))
-    #print (s if s>0 and s<100 else 0)
-    return s if s>0 and s<100 else 0
+    # print (s)
+    return s if s>0 else 0
 
 def gini(array):
     """Calculate the Gini coefficient of a numpy array.

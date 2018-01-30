@@ -151,6 +151,40 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         self.s1=1
         self.mu2=kwargs["mu2"]
         self.s2=1
+        self.sep=kwargs["rich"]
+        self.produce_low = kwargs["buy_low"] # proportion of agents who can produce in lower caste
+        self.produce_high = kwargs["buy_high"] # proportion of agents who can produce in higher caste
+        self.caste=kwargs["low_caste"] # proportion of agents in low caste
+        self.biased_low=kwargs["bias_low"]  # proportion of biased agents among low caste
+        self.biased_high = kwargs["bias_high"] # proportion of biased agents among low caste
+
+    def get_measurements(self,population,timestep):
+        """
+        Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
+        """
+        ret=[{"production":(np.random.normal(loc=self.mu1,scale=self.s1)
+                       if i>len(population)*self.sep else
+                       np.random.normal(loc=self.mu2,scale=self.s2)),
+              "consumption":(np.random.normal(loc=self.mu1,scale=self.s1)
+                       if i>len(population)*self.sep else
+                       np.random.normal(loc=self.mu2,scale=self.s2)),
+              "tariff":np.random.uniform(1,5),"main_cost":0.1,
+              "social_type":(2 if i>len(population)*self.caste else 1),
+              "biased":((0 if i>len(population)*self.caste*self.biased_high else 1)
+                            if i>len(population)*self.caste else
+                            (0 if i>len(population)*self.caste*self.biased_low else 1)),
+              "cost":0,"timestep":timestep,"agentID":i}
+             for i in range(len(population))]
+        return ret
+
+
+class MeasurementGenReal(NegoMeasurementGen):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.mu1=kwargs["mu1"]
+        self.s1=1
+        self.mu2=kwargs["mu2"]
+        self.s2=1
         self.produce_low = kwargs["buy_low"] # proportion of agents who can produce in lower caste
         self.produce_high = kwargs["buy_high"] # proportion of agents who can produce in higher caste
         self.caste=kwargs["low_caste"] # proportion of agents in low caste
@@ -183,20 +217,24 @@ class MeasurementGenBinomial(NegoMeasurementGen):
                   "biased":((0 if i>len(population)*self.caste*self.biased_high else 1)
                             if i>len(population)*self.caste else
                             (0 if i>len(population)*self.caste*self.biased_low else 1)),
-                  "cost":0,"timestep":timestep,"agentID":i,"type":None}  # high class is 2, low class is 1
-                 for i in range(len(population))]
+                  "main_cost":0.1,"cost":0,"timestep":timestep,"agentID":i,"type":None}
+                 for i in range(len(population))]  # high class is 2, low class is 1, main_cost is maintenance cost
             return ret
 
 if __name__ == '__main__':
     # tests={"uniform":{"N":10,"rep":10,"params":{"mu":[5,20,50]},"meas_fct":MeasurementGenNormal},
-    #        "binomial":{"N":10,"rep":10,"params":{"mu1":[1],"mu2":[5,20,50],
-    #                    "meas_fct":MeasurementGenBinomial}}
-    # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
-    tests={"binomial":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    tests={"binomial":{"T":5,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-                                 "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],
-                                 "buy_low":[0.25],"buy_high":[0.48]},
+                       "params":{"N":[2,5,10],"mu1":[1],"mu2":[5,10,20],"rich":[0.2,0.5,0.8],"bias_low":[0.5],
+                                  "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],
+                                  "buy_low":[0.25],"buy_high":[0.48]},
                        "meas_fct":MeasurementGenBinomial}}
+    # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
+    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+    #                    "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+    #                              "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],
+    #                              "buy_low":[0.25],"buy_high":[0.48]},
+    #                    "meas_fct":MeasurementGenReal}}
     for test,conf in tests.items():
         run_experiment(test,conf)

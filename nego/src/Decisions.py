@@ -73,15 +73,17 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         return self.model.current_state["action"]
 
     def feedback(self,perceptions,reward):
-        cost =self.model.current_state["cost"]
         rew = self.model.current_state["reward"]
+        cost = self.model.current_state["cost"]
         rew1 = self.model.current_state["perception"]
         self.model.seller_buyer()
         if self.model.current_state["type"]=="seller":
-            rew.update({"reward":rew1["production"]*rew1["tariff"]})
+            rew.update({"reward":(rew1["production"]-rew1["consumption"])*rew1["tariff"]})
         if self.model.current_state["type"]=="buyer":
-            rew.update({"reward":rew1["consumption"]/100})  # rewards for sellers turn-up only after long time.
-        if rew["reward"]<cost:
-            rew.update({"reward":rew["reward"]-(cost/100)})  # cost affect after some rounds, here 10 rounds
-        #print(self.model.current_state["type"], self.model.current_state["reward"])
+            if rew1["production"]<=0:
+                rew.update({"reward":0})
+            else:
+                rew.update({"reward":rew1["production"]*rew1["tariff"]})
+        rew.update({"reward":rew["reward"]-cost})
+        # print(self.model.current_state["type"], self.model.current_state["reward"],self.model.current_state["cost"])
         return self.model.current_state["reward"]
