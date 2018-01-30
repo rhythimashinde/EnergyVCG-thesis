@@ -27,14 +27,14 @@ def run_experiment(test,conf):
                                  agent_type=NegoAgent)
             model.run(conf["T"],params=params)
             log_tot=log_tot+model.log # concatenate lists
-    #print(log_tot)
     # compute statistics for all tables in log file
     varnames=[k for k,v in conf["params"].items() if len(v)>1] # keep vars for which there is more than one value
     for varname in varnames:
         stats_rew=get_stats(log_tot,"reward",idx=[varname])
         stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
         stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
-        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","gini","success","efficiency"])
+        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","gini","success",
+                                                                      "efficiency","wealth_distribution","market_access"])
         plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
@@ -76,10 +76,6 @@ class RewardLogicUniform(NegoRewardLogic):
         thresh=np.random.normal(loc=np.mean(percs),scale=1)
         thresh=max(1,thresh)
         contribs=np.sum([d["contribution"] for d in decisions])
-        # if thresh<=contribs:
-        #     print("success "+str(thresh)+" "+str(contribs))
-        # else:
-        #     print("insuccess "+str(thresh)+" "+str(contribs))
         outcome=success_nego(thresh,np.sum(contribs))
         if outcome==1:
             costs=np.array([d["cost"] for d in decisions])
@@ -187,7 +183,7 @@ class MeasurementGenBinomial(NegoMeasurementGen):
                   "biased":((0 if i>len(population)*self.caste*self.biased_high else 1)
                             if i>len(population)*self.caste else
                             (0 if i>len(population)*self.caste*self.biased_low else 1)),
-                  "cost":0,"timestep":timestep,"agentID":i}  # high class is 2, low class is 1
+                  "cost":0,"timestep":timestep,"agentID":i,"type":None}  # high class is 2, low class is 1
                  for i in range(len(population))]
             return ret
 

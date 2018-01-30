@@ -27,6 +27,7 @@ class NegoAgent(BaseAgent):
             self.current_state.update({"type":"seller"})
         if state["production"] < state["consumption"] and state["consumption"]!=0:
             self.current_state.update({"type":"buyer"})
+        return self.current_state["type"]
 
     def partner_selection(self):
         other = self.model.schedule.agents

@@ -16,8 +16,9 @@ class NegoDecisionLogic(BaseDecisionLogic):
         self.last_actions=[{"production":p["production"],"tariff":p["tariff"],
                             "consumption":p["consumption"],"agentID":a.unique_id,
                             "contribution":0,"contributed":False,"cost":a.current_state["cost"],
-                            "action":a.current_state["action"],"partner":a.current_state["partner"],
-                            "social_type":p["social_type"],"new_production":a.current_state["perception"]["production"],
+                            "reward":a.current_state["reward"],"action":a.current_state["action"],
+                            "partner":a.current_state["partner"],"social_type":p["social_type"],
+                            "new_production":a.current_state["perception"]["production"],
                             "biased":p["biased"],"new_consumption":a.current_state["perception"]["consumption"]}
                            for a,p in zip(self.model.schedule.agents,perceptions)]
         #print(self.last_actions)
@@ -30,7 +31,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        a = self.model.partner_selection_orderbid_bidsplit()
+        a = self.model.partner_selection_orderbid()
         other = self.model.model.schedule.agents
         cost = self.model.transactions()
         if a != None:
@@ -49,8 +50,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
                         self.model.current_state.update({"action": 1})  # buy
                         a.current_state.update({"action": 2}) # sell
                         if perc["consumption"] <= perc_other["production"]:
-                            a.current_state["perception"].update(
-                                {"production":perc_other["production"]-perc["consumption"]})
+                            a.current_state["perception"].update({"production":perc_other["production"]-perc["consumption"]})
                             self.model.current_state["perception"].update({"consumption": 0})
                         # allocate this remaining energy as surplus in second round
                         else:           # not all needs are satisfied
@@ -70,22 +70,18 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
                             self.model.current_state["perception"].update({"production": 0})
                             a.current_state["perception"].update(
                                 {"consumption":perc_other["consumption"] - perc["production"]})
-                    # else:
-                    #     raise(AssertionError,"Invalid partner selected: types not matching")
-        # print(self.model.current_state["action"])
         return self.model.current_state["action"]
 
     def feedback(self,perceptions,reward):
-        cost = self.model.current_state["cost"]
-        partner = self.model.partner_selection_orderbid()
-        if partner != None:
-            cost_other = partner.current_state["cost"]
-        else:
-            cost_other = 0
+        cost =self.model.current_state["cost"]
         rew = self.model.current_state["reward"]
-        if cost < cost_other: # if the cost is less than partner then rewards increase
-            rew.update({"reward":rew["reward"]+1})
-        else:  # if the cost is more than partner then rewards reduce
-            rew.update({"reward":rew["reward"]-1})
-        # print(self.model.current_state["reward"])
+        rew1 = self.model.current_state["perception"]
+        self.model.seller_buyer()
+        if self.model.current_state["type"]=="seller":
+            rew.update({"reward":rew1["production"]*rew1["tariff"]})
+        if self.model.current_state["type"]=="buyer":
+            rew.update({"reward":rew1["consumption"]/100})  # rewards for sellers turn-up only after long time.
+        if rew["reward"]<cost:
+            rew.update({"reward":rew["reward"]-(cost/100)})  # cost affect after some rounds, here 10 rounds
+        #print(self.model.current_state["type"], self.model.current_state["reward"])
         return self.model.current_state["reward"]

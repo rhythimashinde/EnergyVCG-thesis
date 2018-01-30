@@ -18,22 +18,22 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         Returns:
         A list of dictionaries containing the evaluation of the population behavior
         """
-        #print(self.model)
-        #contributions,values,costs=zip(*[(d["contributed"],d["contribution"],d["cost"]) for d in decisions])
-        #tc=tot_contributions([int(c) for c in contributions])
-        # return [{"gini":gini(values),
-        #         "efficiency":efficiency(self.model.N,tc),
-        #         "tot_contrib":tc}]
+
         actions = [a.current_state["action"] for a in self.model.schedule.agents]
         N = self.model.N
+        N_low = self.model.N
         costs = [a.current_state["cost"] for a in self.model.schedule.agents]
         rewards = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents]
         tot_agents = 0
+        tot_low_agents = 0
         production_tot = 0
         consumption_met = 0
         for a in self.model.schedule.agents:
             if a.current_state["partner"] != None:
                 tot_agents = tot_agents + 1
+                if a.current_state["perception"]["social_type"] ==1:
+                    tot_low_agents = tot_low_agents + 1
+                    N_low = N_low -1
                 if a.current_state["type"] == "seller":
                     partner = a.current_state["partner"]
                     produce = a.current_state["perception"]["production"]
@@ -47,4 +47,5 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                         production_tot = production_tot + produce
                         consumption_met = consumption_met + produce
         return [{"social_welfare":social_welfare(costs,rewards,N),"gini":gini(actions),
-                 "success":success_nego(N,tot_agents),"efficiency":efficiency_nego(consumption_met,production_tot)}]
+                 "success":success_nego(N,tot_agents),"efficiency":efficiency_nego(consumption_met,production_tot),
+                 "wealth_distribution":gini(rewards),"market_access":market_access(N_low,tot_low_agents)}]
