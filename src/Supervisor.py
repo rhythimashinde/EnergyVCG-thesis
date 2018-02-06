@@ -93,9 +93,12 @@ class BaseSupervisor(Model):
         """
         if perceptions is None:
             perceptions=self.current_state["perception"]
+        partner = self.partner_set()
         decisions=self.decision_fct.get_decision(perceptions) # call own decision fct
         return decisions
 
+    def partner_set(self):
+        return self.decision_fct.get_partner()
 
     def __learn(self,perceptions,reward):
         """

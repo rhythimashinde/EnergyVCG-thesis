@@ -18,6 +18,9 @@ class BaseDecisionLogic():
                             "contributed":False,"timestep":a["timestep"]} for a in perceptions]
         return self.last_actions
 
+    def get_partner(self):
+        return [{"agent":None,"partner":None}]
+
     def feedback(self,perceptions,reward):
         #print("2")
         pass

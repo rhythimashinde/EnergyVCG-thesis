@@ -14,7 +14,7 @@ class NegoAgent(BaseAgent):
         partner: the selected partner
         perception: last measurement, containing:
             production: how much energy is produced
-            consumption: how much energy is requireds
+            consumption: how much energy is required
             cost: the cost of contribution
         """
         super().__init__(unique_id,model,decision_fct=decision_fct)
@@ -37,9 +37,12 @@ class NegoAgent(BaseAgent):
             if a != self: # making sure that the agent doesn't select itself
                 perc_other = a.current_state["perception"]
                 if self.current_state["type"] != a.current_state["type"]:
-                    # modify tariff rule: # of different types
+                    # modify tariff rule: of different types
                     self.current_state["partner"] = a
         return self.current_state["partner"]
+
+    def partner_selection_mediated(self):
+        partner = self.model.get_partner()
 
     def partner_selection_orderbid(self):
         other = self.model.schedule.agents
@@ -53,8 +56,8 @@ class NegoAgent(BaseAgent):
                 sellers.append({"agent":a,"agent_bid":perc_other["tariff"]})
             elif a.current_state["type"] == "buyer":
                 buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
-        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) # ascending sorted sellers as bids
-        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) # descending sorted buyers as bids
+        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))  # ascending sorted sellers as bids
+        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)  # descending sorted buyers as bids
         if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
             sorted_list = sellers_sorted
             other_list = buyers_sorted
@@ -65,11 +68,10 @@ class NegoAgent(BaseAgent):
             x = sorted_list[i]["agent"]
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
-        #print(self.current_state["reward"])
+        # print(self.current_state["reward"])
         return self.current_state["partner"]
 
     def partner_selection_orderbid_bidsplit(self):
-        #TODO do I need to move this generalised part to the supervisor? Or just do that for mediated negotiation
         other = self.model.schedule.agents
         perc=self.current_state["perception"]
         sellers = []
