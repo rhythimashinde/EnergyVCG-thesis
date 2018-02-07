@@ -121,7 +121,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             perceptions=self.model.current_state["perception"]
 
         # base: bilateral partner selection, include below snippet only
-        # a = self.model.partner_selection_orderbid()
+        a = self.model.partner_selection_orderbid()
 
         # exp 1: bilateral bid split partner selction, include below snippet only
         # a = self.model.partner_selection_orderbid_bidsplit()
@@ -138,15 +138,15 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         #             a = i["partner"]
 
         # exp 3 and 5: mediated bid split partner selection, include below snippet only
-        partner_set = self.model.partner_selection_orderbid_bidsplit_mediated()
-        a= None
-        if partner_set !=None:
-            for i in partner_set:
-                selfID = self.model.current_state["agentID"]
-                agenti= i["agent"]
-                agentID = agenti.current_state["agentID"]
-                if agentID==selfID:
-                    a = i["partner"]
+        # partner_set = self.model.partner_selection_orderbid_bidsplit_mediated()
+        # a= None
+        # if partner_set !=None:
+        #     for i in partner_set:
+        #         selfID = self.model.current_state["agentID"]
+        #         agenti= i["agent"]
+        #         agentID = agenti.current_state["agentID"]
+        #         if agentID==selfID:
+        #             a = i["partner"]
 
         if a!= None:
             p_p=a.current_state["perception"]
@@ -155,30 +155,30 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             pc = self.model.current_state
 
             # for exp 4, 5 with mediator discrimination, include everything below
-            if p["bias_degree"] == 0 or (p["bias_degree"]==1 and p["social_type"] == p_p["social_type"]):
+            # if p["bias_degree"] == 0 or (p["bias_degree"]==1 and p["social_type"] == p_p["social_type"]):
 
-                # for base, exp 1 with agents discrimination, include everything below, comment above
-                if p["biased"] == 0 or (p["biased"] == 1 and p["social_type"] == p_p["social_type"]):
+            # for base, exp 1 with agents discrimination, include everything below, comment above
+            if p["biased"] == 0 or (p["biased"] == 1 and p["social_type"] == p_p["social_type"]):
 
-                    # for exp 2, 3 with no discrimination, include everything below, comment above
-                    if pc["type"] == "buyer" and pc_p["type"] == "seller":
-                        if p["consumption"] <= (p_p["production"] - p_p["consumption"]):
-                            pc.update({"action": 1})  # buy
-                            pc_p.update({"action": 2}) # sell
-                            p_p.update({"production":p_p["production"]-p["consumption"]})
-                            p.update({"consumption": 0})
-                        else:
-                            p_p.update({"production": 0})
-                            p.update({"consumption": p["consumption"]-p_p["production"]})
-                    elif pc["type"] == "seller" and pc_p["type"] == "buyer":
-                        if (p["production"]-p["consumption"]) >= p_p["consumption"]:
-                            pc.update({"action": 2})  # sell
-                            pc_p.update({"action": 1}) # buy
-                            p.update({"production": p["production"] - p_p["consumption"]})
-                            p_p.update({"consumption": 0})
-                        else:
-                            p.update({"production": 0})
-                            p_p.update({"consumption":p_p["consumption"] - p["production"]})
+                # for exp 2, 3 with no discrimination, include everything below, comment above
+                if pc["type"] == "buyer" and pc_p["type"] == "seller":
+                    if p["consumption"] <= (p_p["production"] - p_p["consumption"]):
+                        pc.update({"action": 1})  # buy
+                        pc_p.update({"action": 2}) # sell
+                        p_p.update({"production":p_p["production"]-p["consumption"]})
+                        p.update({"consumption": 0})
+                    else:
+                        p_p.update({"production": 0})
+                        p.update({"consumption": p["consumption"]-p_p["production"]})
+                elif pc["type"] == "seller" and pc_p["type"] == "buyer":
+                    if (p["production"]-p["consumption"]) >= p_p["consumption"]:
+                        pc.update({"action": 2})  # sell
+                        pc_p.update({"action": 1}) # buy
+                        p.update({"production": p["production"] - p_p["consumption"]})
+                        p_p.update({"consumption": 0})
+                    else:
+                        p.update({"production": 0})
+                        p_p.update({"consumption":p_p["consumption"] - p["production"]})
         return self.model.current_state["action"]
 
     def feedback(self,perceptions,reward):

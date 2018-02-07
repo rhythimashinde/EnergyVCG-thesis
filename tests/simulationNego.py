@@ -194,6 +194,8 @@ class MeasurementGenReal(NegoMeasurementGen):
         self.biased_low=kwargs["bias_low"]  # proportion of biased agents among low caste
         self.biased_high = kwargs["bias_high"] # proportion of biased agents among low caste
         self.bias_mediator = kwargs["bias_degree"] # proportion of agents being biased by the mediator
+        self.tariff_avg = kwargs["tariff_avg"]
+        self.produce_avg = kwargs["produce_avg"]
 
     def get_measurements(self,population,timestep):
         """
@@ -206,9 +208,9 @@ class MeasurementGenReal(NegoMeasurementGen):
             if has_header:
                 next(readCSV)
             data = [row for row in readCSV]
-            tariff = data[timestep]["inrpriceperkwh"]
+            tariff = data[timestep]["inrpriceperkwh"+str(int(self.tariff_avg))]
             tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
-            production = np.random.uniform(20000,100000)*8/24/20000
+            production = self.produce_avg*np.random.uniform(20000,100000)*8/24/20000
             ret=[{"consumption":abs(np.random.normal(loc=self.mu2,scale=self.s1)
                            if i>len(population)*self.caste else
                            np.random.normal(loc=self.mu1,scale=self.s2)),
@@ -244,11 +246,36 @@ if __name__ == '__main__':
     #                    "meas_fct":MeasurementGenReal}}
 
     # for exp 4, 5 implement snippet below only
+    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+    #                    "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+    #                              "bias_high":[0.5],"low_caste":[0.36,0.5,0.8],
+    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.2,0.5,0.8]},
+    #                    "meas_fct":MeasurementGenReal}}
+
+    # for sensitivity analysis with consumption upgrading
+    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+    #                    "params":{"N":[50],"mu1":[1.01,2.02,3.03],"mu2":[1.37,3,5],"bias_low":[0.5],
+    #                              "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
+    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+    #                    "meas_fct":MeasurementGenReal}}
+
+    # for sensitivity analysis for tariff scaling
+    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+    #                    "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+    #                              "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1,2,3],"produce_avg":[1],
+    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+    #                    "meas_fct":MeasurementGenReal}}
+
+    # for sensitivity analysis for production scaling
     tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-                                 "bias_high":[0.5],"low_caste":[0.36,0.5,0.8],
-                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.2,0.5,0.8]},
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1,2,3],
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
                        "meas_fct":MeasurementGenReal}}
+
     for test,conf in tests.items():
         run_experiment(test,conf)
