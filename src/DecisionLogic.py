@@ -4,6 +4,7 @@ class BaseDecisionLogic():
     def __init__(self,model):
         np.random.seed()
         self.last_actions=None
+        self.partner_set=[]
         self.model=model
 
     def get_decision(self,perceptions):
@@ -18,8 +19,9 @@ class BaseDecisionLogic():
                             "contributed":False,"timestep":a["timestep"]} for a in perceptions]
         return self.last_actions
 
-    def get_partner(self):
-        return [{"agent":None,"partner":None}]
+    # def get_partner(self):
+    #     self.partner_set = [{"agent":None,"partner":"ABC"}]
+    #     return self.partner_set
 
     def feedback(self,perceptions,reward):
         #print("2")

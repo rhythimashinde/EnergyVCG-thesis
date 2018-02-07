@@ -41,8 +41,11 @@ class NegoAgent(BaseAgent):
                     self.current_state["partner"] = a
         return self.current_state["partner"]
 
-    def partner_selection_mediated(self):
-        partner = self.model.get_partner()
+    def partner_selection_orderbid_mediated(self):
+        return self.decision_fct.get_partner()
+
+    def partner_selection_orderbid_bidsplit_mediated(self):
+        return self.decision_fct.get_partner_bidsplit()
 
     def partner_selection_orderbid(self):
         other = self.model.schedule.agents

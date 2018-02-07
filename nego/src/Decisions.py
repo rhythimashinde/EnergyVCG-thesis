@@ -20,13 +20,23 @@ class NegoDecisionLogic(BaseDecisionLogic):
                             "reward":a.current_state["reward"],"action":a.current_state["action"],
                             "partner":a.current_state["partner"],"social_type":p["social_type"],
                             "new_production":a.current_state["perception"]["production"],
-                            "biased":p["biased"],"new_consumption":a.current_state["perception"]["consumption"]}
+                            "biased":p["biased"],"bias_degree":p["bias_degree"],
+                            "new_consumption":a.current_state["perception"]["consumption"]}
                            for a,p in zip(self.model.schedule.agents,perceptions)]
-        # print(self.last_actions)
         return self.last_actions
 
     def get_partner(self):
-        other = self.model.schedule.agents
+        pass
+
+    def get_partner_bidsplit(self):
+        pass
+
+class NegoDecisionLogicAgent(BaseDecisionLogic):
+    """
+    Returns a constant decision
+    """
+    def get_partner(self):
+        other = self.model.model.schedule.agents
         sellers = []
         buyers = []
         for a in other:
@@ -38,10 +48,10 @@ class NegoDecisionLogic(BaseDecisionLogic):
             elif a.current_state["type"] == "buyer":
                 buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
 
-        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))  # ascending sorted sellers as bids
-        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)  # descending sorted buyers as bids
+        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))
+        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)
 
-        if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
+        if len(sellers_sorted)<=len(buyers_sorted):
             sorted_list = sellers_sorted
             other_list = buyers_sorted
         else:
@@ -54,59 +64,121 @@ class NegoDecisionLogic(BaseDecisionLogic):
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
             partner_set.append({"agent":x,"partner":y})
-
         return partner_set
 
-class NegoDecisionLogicAgent(BaseDecisionLogic):
-    """
-    Returns a constant decision
-    """
+    def get_partner_bidsplit(self):
+        other = self.model.model.schedule.agents
+        perc=self.model.current_state["perception"]
+        sellers = []
+        buyers = []
+        for a in other:
+            a.seller_buyer()
+            perc_other = a.current_state["perception"]
+            if a.current_state["type"] == "seller":
+                sellers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                                "produce":a.current_state["perception"]["production"]})
+            elif a.current_state["type"] == "buyer":
+                buyers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                               "consume":a.current_state["perception"]["consumption"]})
+        if not sellers or all(sellers[i]["produce"] == 0 for i in range(len(sellers))):
+            pass
+        else:
+            produce_smallest = min (sellers[i]["produce"] for i in range(len(sellers)) if sellers[i]["produce"]>0)
+            # get smallest element of produce greater than 0
+            for i in range(len(sellers)):
+                sellers[i]["produce"] =round((sellers[i]["produce"]/produce_smallest),0)
+                for a in other:
+                    if sellers[i]["agent"] == a:
+                        a.current_state["perception"].update({"production":sellers[i]["produce"]})
+        if not buyers or all(buyers[i]["consume"] == 0 for i in range(len(buyers))):
+            pass
+        else:
+            consume_smallest = min (buyers[i]["consume"] for i in range(len(buyers)) if buyers[i]["consume"]>0)
+            for i in range(len(buyers)):
+                buyers[i]["consume"] = round((buyers[i]["consume"]/consume_smallest),0)
+                for a in other:
+                    if buyers[i]["agent"] == a:
+                        a.current_state["perception"].update({"consumption":buyers[i]["consume"]})
+        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))
+        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)
+        if len(sellers_sorted)<=len(buyers_sorted):
+            sorted_list = sellers_sorted
+            other_list = buyers_sorted
+        else:
+            sorted_list = buyers_sorted
+            other_list = sellers_sorted
+
+        partner_set = []
+        for i in range(len(sorted_list)):
+            x = sorted_list[i]["agent"]
+            y = other_list[i]["agent"]
+            x.current_state.update({"partner":y})
+            partner_set.append({"agent":x,"partner":y})
+        return partner_set
+
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
-        # partner_set = self.model.partner_selection_mediated()  # mediated
+
+        # base: bilateral partner selection, include below snippet only
+        # a = self.model.partner_selection_orderbid()
+
+        # exp 1: bilateral bid split partner selction, include below snippet only
+        # a = self.model.partner_selection_orderbid_bidsplit()
+
+        # for exp 2 and 4: mediated partner selection, include below snippet only
+        # partner_set = self.model.partner_selection_orderbid_mediated()
         # a= None
-        # for i in partner_set:
-        #     if i["agent"]==self:
-        #         a = i["partner"]
-        a = self.model.partner_selection_orderbid()  # bilateral
-        print(a)
-        other = self.model.model.schedule.agents
-        cost = self.model.transactions()
+        # if partner_set !=None:
+        #     for i in partner_set:
+        #         selfID = self.model.current_state["agentID"]
+        #         agenti= i["agent"]
+        #         agentID = agenti.current_state["agentID"]
+        #         if agentID==selfID:
+        #             a = i["partner"]
+
+        # exp 3 and 5: mediated bid split partner selection, include below snippet only
+        partner_set = self.model.partner_selection_orderbid_bidsplit_mediated()
+        a= None
+        if partner_set !=None:
+            for i in partner_set:
+                selfID = self.model.current_state["agentID"]
+                agenti= i["agent"]
+                agentID = agenti.current_state["agentID"]
+                if agentID==selfID:
+                    a = i["partner"]
+
         if a!= None:
-            perc=a.current_state["perception"]
-            for other in other:
-                perc_other=other.current_state["perception"]
-                if self.model.current_state["perception"]["biased"] == 0 \
-                        or (self.model.current_state["perception"]["biased"] == 1
-                            and self.model.current_state["perception"]["social_type"] == a.current_state["perception"]["social_type"]):
-                    # only if buyer is not biased transaction would happen or if biased and has an allocated partner as the same caste
-                    if self.model.current_state["type"] == "buyer" \
-                            and a.current_state["type"] == "seller" \
-                            and perc["consumption"] <= (perc_other["production"] - perc_other["consumption"]):
-                        self.model.current_state.update({"action": 1})  # buy
-                        a.current_state.update({"action": 2}) # sell
-                        if perc["consumption"] <= perc_other["production"]:
-                            a.current_state["perception"].update({"production":perc_other["production"]-perc["consumption"]})
-                            self.model.current_state["perception"].update({"consumption": 0})
-                        # allocate this remaining energy as surplus in second round
-                        else:           # not all needs are satisfied
-                            a.current_state["perception"].update({"production": 0})
-                            self.model.current_state["perception"].update(
-                                {"consumption": perc["consumption"]-perc_other["production"]})
-                    elif self.model.current_state["type"] == "seller" \
-                            and a.current_state["type"] == "buyer" \
-                            and (perc["production"]-perc["consumption"]) >= perc_other["consumption"]:
-                        self.model.current_state.update({"action": 2})  # sell
-                        a.current_state.update({"action": 1}) # buy
-                        if perc["production"] >= perc_other["consumption"]:
-                            self.model.current_state["perception"].update(
-                                {"production": perc["production"] - perc_other["consumption"]})
-                            a.current_state["perception"].update({"consumption": 0})
-                        else:           # not all needs are satisfied
-                            self.model.current_state["perception"].update({"production": 0})
-                            a.current_state["perception"].update(
-                                {"consumption":perc_other["consumption"] - perc["production"]})
+            p_p=a.current_state["perception"]
+            pc_p=a.current_state
+            p = self.model.current_state["perception"]
+            pc = self.model.current_state
+
+            # for exp 4, 5 with mediator discrimination, include everything below
+            if p["bias_degree"] == 0 or (p["bias_degree"]==1 and p["social_type"] == p_p["social_type"]):
+
+                # for base, exp 1 with agents discrimination, include everything below, comment above
+                if p["biased"] == 0 or (p["biased"] == 1 and p["social_type"] == p_p["social_type"]):
+
+                    # for exp 2, 3 with no discrimination, include everything below, comment above
+                    if pc["type"] == "buyer" and pc_p["type"] == "seller":
+                        if p["consumption"] <= (p_p["production"] - p_p["consumption"]):
+                            pc.update({"action": 1})  # buy
+                            pc_p.update({"action": 2}) # sell
+                            p_p.update({"production":p_p["production"]-p["consumption"]})
+                            p.update({"consumption": 0})
+                        else:
+                            p_p.update({"production": 0})
+                            p.update({"consumption": p["consumption"]-p_p["production"]})
+                    elif pc["type"] == "seller" and pc_p["type"] == "buyer":
+                        if (p["production"]-p["consumption"]) >= p_p["consumption"]:
+                            pc.update({"action": 2})  # sell
+                            pc_p.update({"action": 1}) # buy
+                            p.update({"production": p["production"] - p_p["consumption"]})
+                            p_p.update({"consumption": 0})
+                        else:
+                            p.update({"production": 0})
+                            p_p.update({"consumption":p_p["consumption"] - p["production"]})
         return self.model.current_state["action"]
 
     def feedback(self,perceptions,reward):
@@ -122,5 +194,4 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             else:
                 rew.update({"reward":rew1["production"]*rew1["tariff"]})
         rew.update({"reward":rew["reward"]-cost})
-        # print(self.model.current_state["type"], self.model.current_state["reward"],self.model.current_state["cost"])
         return self.model.current_state["reward"]

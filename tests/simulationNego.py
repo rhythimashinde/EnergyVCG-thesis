@@ -158,6 +158,7 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         self.caste=kwargs["low_caste"] # proportion of agents in low caste
         self.biased_low=kwargs["bias_low"]  # proportion of biased agents among low caste
         self.biased_high = kwargs["bias_high"] # proportion of biased agents among low caste
+        self.bias_mediator = kwargs["bias_degree"] # proportion of agents being biased by the mediator
 
     def get_measurements(self,population,timestep):
         """
@@ -174,6 +175,7 @@ class MeasurementGenBinomial(NegoMeasurementGen):
               "biased":((0 if i>len(population)*self.caste*self.biased_high else 1)
                             if i>len(population)*self.caste else
                             (0 if i>len(population)*self.caste*self.biased_low else 1)),
+              "bias_degree":(0 if i>len(population)*self.bias_mediator else 1),
               "cost":0,"timestep":timestep,"agentID":i}
              for i in range(len(population))]
         return ret
@@ -191,6 +193,7 @@ class MeasurementGenReal(NegoMeasurementGen):
         self.caste=kwargs["low_caste"] # proportion of agents in low caste
         self.biased_low=kwargs["bias_low"]  # proportion of biased agents among low caste
         self.biased_high = kwargs["bias_high"] # proportion of biased agents among low caste
+        self.bias_mediator = kwargs["bias_degree"] # proportion of agents being biased by the mediator
 
     def get_measurements(self,population,timestep):
         """
@@ -217,6 +220,7 @@ class MeasurementGenReal(NegoMeasurementGen):
                   "biased":((0 if i>len(population)*self.caste*self.biased_high else 1)
                             if i>len(population)*self.caste else
                             (0 if i>len(population)*self.caste*self.biased_low else 1)),
+                  "bias_degree":(0 if i>len(population)*self.bias_mediator else 1),
                   "main_cost":0.1,"cost":0,"timestep":timestep,"agentID":i,"type":None}
                  for i in range(len(population))]  # high class is 2, low class is 1, main_cost is maintenance cost
             return ret
@@ -227,14 +231,24 @@ if __name__ == '__main__':
     #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
     #                    "params":{"N":[2,5,10],"mu1":[1],"mu2":[5,10,20],"rich":[0.2,0.5,0.8],"bias_low":[0.5],
     #                               "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],
-    #                               "buy_low":[0.25],"buy_high":[0.48]},
+    #                               "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
     #                    "meas_fct":MeasurementGenBinomial}}
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
+
+    # for base, exp 1, 2, 3 implement snippet below only
+    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+    #                    "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+    #                              "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],
+    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+    #                    "meas_fct":MeasurementGenReal}}
+
+    # for exp 4, 5 implement snippet below only
     tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
                        "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-                                 "bias_high":[0.2,0.5,0.8],"low_caste":[0.36,0.5,0.8],
-                                 "buy_low":[0.25],"buy_high":[0.48]},
+                                 "bias_high":[0.5],"low_caste":[0.36,0.5,0.8],
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.2,0.5,0.8]},
                        "meas_fct":MeasurementGenReal}}
     for test,conf in tests.items():
         run_experiment(test,conf)

@@ -6,12 +6,13 @@ class BaseAgent(Agent):
     """
     Base agent
     """
-    def __init__(self,unique_id,model,decision_fct=BaseDecisionLogic):
+    def __init__(self,unique_id,model,agent_decision_fct=BaseDecisionLogic,decision_fct=BaseDecisionLogic):
         """
         create agent
         """
         super().__init__(unique_id,model)
         np.random.seed()
+        self.agent_decision_fct = agent_decision_fct(self)
         self.decision_fct=decision_fct(self) # new instance
         self.current_state={}
         self.log=[]
