@@ -24,16 +24,23 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         N_low = self.model.N
         costs = [a.current_state["cost"] for a in self.model.schedule.agents]
         rewards = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents]
-        tot_agents = 0
+        rewards_low = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents
+                   if a.current_state["perception"]["social_type"]==1]
+        rewards_high = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents
+                   if a.current_state["perception"]["social_type"]==2]
         tot_low_agents = 0
+        tot_high_agents = 0
         production_tot = 0
         consumption_met = 0
         for a in self.model.schedule.agents:
-            if a.current_state["partner"] != None:
-                tot_agents = tot_agents + 1
-                if a.current_state["perception"]["social_type"] ==1:
+            if a.current_state["perception"]["social_type"] ==1:
+                N_low = N_low -1
+                if a.current_state["partner"] != None:
                     tot_low_agents = tot_low_agents + 1
-                    N_low = N_low -1
+            else:
+                if a.current_state["partner"] != None:
+                    tot_high_agents = tot_high_agents + 1
+            if a.current_state["partner"] != None:
                 if a.current_state["type"] == "seller":
                     partner = a.current_state["partner"]
                     produce = a.current_state["perception"]["production"]
@@ -46,6 +53,11 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                     else:
                         production_tot = production_tot + produce
                         consumption_met = consumption_met + produce
-        return [{"social_welfare":social_welfare(costs,rewards,N),"gini":gini(actions),
-                 "success":success_nego(N,tot_agents),"efficiency":efficiency_nego(consumption_met,production_tot),
-                 "wealth_distribution":gini(rewards),"market_access":market_access(N_low,tot_low_agents)}]
+        N_high = N - N_low
+        return [{"social_welfare":social_welfare(costs,rewards,N),
+                 "gini":gini(actions),
+                 "market_access_low":success_nego(N_high,tot_high_agents),
+                 "efficiency":efficiency_nego(consumption_met,production_tot),
+                 "wealth_distribution_low":gini(rewards_high),
+                 "wealth_distribution_high":gini(rewards_low),
+                 "market_access_high":market_access(N_low,tot_low_agents)}]

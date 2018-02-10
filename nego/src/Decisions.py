@@ -161,7 +161,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             if p["biased"] == 0 or (p["biased"] == 1 and p["social_type"] == p_p["social_type"]):
 
                 # for exp 2, 3 with no discrimination, include everything below, comment above
-                if pc["type"] == "buyer" and pc_p["type"] == "seller":
+                if pc["type"] ==  "buyer" and pc_p["type"] == "seller":
                     if p["consumption"] <= (p_p["production"] - p_p["consumption"]):
                         pc.update({"action": 1})  # buy
                         pc_p.update({"action": 2}) # sell

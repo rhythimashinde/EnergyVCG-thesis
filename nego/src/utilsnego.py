@@ -38,7 +38,10 @@ def success_nego(tot_agents,tot_transactions):
         as per the number of agents getting partners
     """
     #print("success=",(tot_transactions*2-tot_agents)/tot_agents)
-    return ((tot_agents-tot_transactions*2)/tot_agents)
+    if tot_agents !=0:
+        return ((tot_agents-tot_transactions*2)/tot_agents)
+    else:
+        return 0
 
 def market_access(tot_agents_poor,tot_transactions_poor):
     """
@@ -190,7 +193,8 @@ def plot_trend(df,xname,filename,trends=None):
 
 def plot_measures(df,xname,filename,trends=None):
     fig=plt.figure()
-    for measures,ylim,i in [[["gini","success","efficiency","wealth_distribution","market_access"],[0,1],0],
+    for measures,ylim,i in [[["gini","efficiency","wealth_distribution_high","wealth_distribution_low",
+                              "market_access_high","market_access_low"],[0,1],0],
                             [["social_welfare"],None,1]]:
         ax = fig.add_subplot(121+i)
         x=df[xname]
