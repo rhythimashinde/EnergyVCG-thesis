@@ -31,16 +31,16 @@ def run_experiment(test,conf):
     # compute statistics for all tables in log file
     varnames=[k for k,v in conf["params"].items() if len(v)>1] # keep vars for which there is more than one value
     for varname in varnames:
-        stats_rew=get_stats(log_tot,"reward",idx=[varname])
-        stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
-        stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
-        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","gini",
-                                                                      "efficiency","wealth_distribution_high",
-                                                                      "market_access_high","market_access_low",
+        #stats_rew=get_stats(log_tot,"reward",idx=[varname])
+        #stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
+        #stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
+        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare_high","social_welfare_low",
+                                                                      "gini","efficiency","market_access_high",
+                                                                      "market_access_low","wealth_distribution_high",
                                                                       "wealth_distribution_low"])
-        plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
-        plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
-        plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
+        #plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
+        #plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
+        #plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
 
 class RewardLogicFull(NegoRewardLogic):
@@ -167,10 +167,10 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
         ret=[{"production":(np.random.normal(loc=self.mu1,scale=self.s1)
-                       if i>len(population)*self.sep else
+                       if i>len(population)*self.caste else
                        np.random.normal(loc=self.mu2,scale=self.s2)),
               "consumption":(np.random.normal(loc=self.mu1,scale=self.s1)
-                       if i>len(population)*self.sep else
+                       if i>len(population)*self.caste else
                        np.random.normal(loc=self.mu2,scale=self.s2)),
               "tariff":np.random.uniform(1,5),"main_cost":0.1,
               "social_type":(2 if i>len(population)*self.caste else 1),
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
     tests={"binomial":{"T":5,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[20,50,100],"mu1":[1],"mu2":[5],"rich":[0.5],"bias_low":[0.2,0.5,0.8],
+                       "params":{"N":[20,50,100],"mu1":[1],"mu2":[5],"rich":[0.5],"bias_low":[0.2],
                                   "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
                                   "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
                        "meas_fct":MeasurementGenBinomial}}
@@ -245,16 +245,16 @@ if __name__ == '__main__':
     # for base, exp 1, 2, 3 implement snippet below only
     # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
     #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-    #                    "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.2,0.5,0.8],
-    #                              "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
-    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+    #                    "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+    #                              "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],
+    #                              "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
     #                    "meas_fct":MeasurementGenReal}}
 
     # for exp 4, 5 implement snippet below only
     # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
     #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
     #                    "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-    #                              "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
+    #                              "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
     #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.2,0.5,0.8]},
     #                    "meas_fct":MeasurementGenReal}}
 

@@ -195,7 +195,7 @@ def plot_measures(df,xname,filename,trends=None):
     fig=plt.figure()
     for measures,ylim,i in [[["gini","efficiency","wealth_distribution_high","wealth_distribution_low",
                               "market_access_high","market_access_low"],[0,1],0],
-                            [["social_welfare"],None,1]]:
+                            [["social_welfare_high","social_welfare_low"],None,1]]:
         ax = fig.add_subplot(121+i)
         x=df[xname]
         ax.set_xlabel(xname)
