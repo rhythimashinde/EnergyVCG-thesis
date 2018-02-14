@@ -1,5 +1,4 @@
 from src.Agent import BaseAgent
-from mesa import Agent
 from nego.src.Decisions import NegoDecisionLogicAgent
 import operator
 
@@ -22,6 +21,11 @@ class NegoAgent(BaseAgent):
                             "partner":None,"action":0,"cost":0,"reward":0,"agentID":self.unique_id}
 
     def seller_buyer(self):
+        """
+
+        Returns: whether an agent is a seller or a buyer
+
+        """
         state=self.current_state["perception"]
         if state["production"] > state["consumption"] and state["production"]!=0:
             self.current_state.update({"type":"seller"})
@@ -30,24 +34,28 @@ class NegoAgent(BaseAgent):
         return self.current_state["type"]
 
     def partner_selection(self):
+        """
+
+        Returns: the partner for bilateral based on simply matching any seller with any buyer
+
+        """
         other = self.model.schedule.agents
-        perc=self.current_state["perception"]
+        perc = self.current_state["perception"]
         self.seller_buyer()
         for a in other:
-            if a != self: # making sure that the agent doesn't select itself
+            if a != self:
                 perc_other = a.current_state["perception"]
                 if self.current_state["type"] != a.current_state["type"]:
-                    # modify tariff rule: of different types
                     self.current_state["partner"] = a
         return self.current_state["partner"]
 
-    def partner_selection_orderbid_mediated(self):
-        return self.decision_fct.get_partner()
-
-    def partner_selection_orderbid_bidsplit_mediated(self):
-        return self.decision_fct.get_partner_bidsplit()
 
     def partner_selection_orderbid(self):
+        """
+
+        Returns: partner for bilateral matching using ordering bids logic
+
+        """
         other = self.model.schedule.agents
         perc=self.current_state["perception"]
         sellers = []
@@ -71,58 +79,14 @@ class NegoAgent(BaseAgent):
             x = sorted_list[i]["agent"]
             y = other_list[i]["agent"]
             x.current_state.update({"partner":y})
-        # print(self.current_state["reward"])
-        return self.current_state["partner"]
-
-    def partner_selection_orderbid_bidsplit(self):
-        other = self.model.schedule.agents
-        perc=self.current_state["perception"]
-        sellers = []
-        buyers = []
-        for a in other:
-            a.seller_buyer()
-            perc_other = a.current_state["perception"]
-            if a.current_state["type"] == "seller":
-                sellers.append({"agent":a,"agent_bid":perc_other["tariff"],
-                                "produce":a.current_state["perception"]["production"]})
-            elif a.current_state["type"] == "buyer":
-                buyers.append({"agent":a,"agent_bid":perc_other["tariff"],
-                               "consume":a.current_state["perception"]["consumption"]})
-        if not sellers or all(sellers[i]["produce"] == 0 for i in range(len(sellers))):
-            pass
-        else:
-            produce_smallest = min (sellers[i]["produce"] for i in range(len(sellers)) if sellers[i]["produce"]>0)
-            # get smallest element of produce greater than 0
-            for i in range(len(sellers)):
-                sellers[i]["produce"] =round((sellers[i]["produce"]/produce_smallest),0)
-                for a in other:
-                    if sellers[i]["agent"] == a:
-                        a.current_state["perception"].update({"production":sellers[i]["produce"]})
-        if not buyers or all(buyers[i]["consume"] == 0 for i in range(len(buyers))):
-            pass
-        else:
-            consume_smallest = min (buyers[i]["consume"] for i in range(len(buyers)) if buyers[i]["consume"]>0)
-            # get smallest element of consumption greater than 0
-            for i in range(len(buyers)):
-                buyers[i]["consume"] = round((buyers[i]["consume"]/consume_smallest),0)
-                for a in other:
-                    if buyers[i]["agent"] == a:
-                        a.current_state["perception"].update({"consumption":buyers[i]["consume"]})
-        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid')) # ascending sorted sellers as bids
-        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True) # descending sorted buyers as bids
-        if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
-            sorted_list = sellers_sorted
-            other_list = buyers_sorted
-        else:
-            sorted_list = buyers_sorted
-            other_list = sellers_sorted
-        for i in range(len(sorted_list)):
-            x = sorted_list[i]["agent"]
-            y = other_list[i]["agent"]
-            x.current_state.update({"partner":y})
         return self.current_state["partner"]
 
     def transactions(self):
+        """
+
+        Returns: cost for the sellers for their transactions/ energy trade
+
+        """
         if self.current_state["type"] == "seller":
             if self.current_state["perception"]["production"] != 0:
                 self.current_state.update({"cost":self.current_state["perception"]["production"]*
@@ -130,12 +94,30 @@ class NegoAgent(BaseAgent):
         return self.current_state["cost"]
 
     def feedback(self,reward,timestep,perceptions=None):
+        """
+
+        Args:
+            reward: the list of rewards for all agents
+            timestep: the timestep for this instance
+            perceptions: the list of measurements for the agent
+
+        Returns: the updated decision on partner selection based on the rewards
+
+        """
         super().feedback(reward,timestep,perceptions)
         reward_new = self.decision_fct.feedback(perceptions,reward)
-        if reward_new["reward"] <= 0: #if there is no rewards in the system then the agent decides to have no partner
+        if reward_new["reward"] <= 0:
             self.current_state.update({"partner":None})
 
     def perception(self,perceptions,population=[]):
+        """
+
+        Args:
+            perceptions: the list of measurements for the agent
+            population: the list of the agents
+
+        Returns: the allocated type of buyer or seller to the agent
+
+        """
         super().perception(perceptions,population=[])
         self.current_state["type"]=self.seller_buyer()
-

@@ -2,6 +2,7 @@ import random
 from src.DecisionLogic import BaseDecisionLogic
 from src.Supervisor import BaseSupervisor
 import operator
+import math
 
 class NegoDecisionLogic(BaseDecisionLogic):
     def get_decision(self,perceptions):
@@ -26,49 +27,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
         return self.last_actions
 
     def get_partner(self):
-        pass
-
-    def get_partner_bidsplit(self):
-        pass
-
-class NegoDecisionLogicAgent(BaseDecisionLogic):
-    """
-    Returns a constant decision
-    """
-    def get_partner(self):
-        other = self.model.model.schedule.agents
-        sellers = []
-        buyers = []
-        for a in other:
-            perc=a.current_state["perception"]
-            a.seller_buyer()
-            perc_other = a.current_state["perception"]
-            if a.current_state["type"] == "seller":
-                sellers.append({"agent":a,"agent_bid":perc_other["tariff"]})
-            elif a.current_state["type"] == "buyer":
-                buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
-
-        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))
-        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)
-
-        if len(sellers_sorted)<=len(buyers_sorted):
-            sorted_list = sellers_sorted
-            other_list = buyers_sorted
-        else:
-            sorted_list = buyers_sorted
-            other_list = sellers_sorted
-
-        partner_set =[]
-        for i in range(len(sorted_list)):
-            x = sorted_list[i]["agent"]
-            y = other_list[i]["agent"]
-            x.current_state.update({"partner":y})
-            partner_set.append({"agent":x,"partner":y})
-        return partner_set
-
-    def get_partner_bidsplit(self):
-        other = self.model.model.schedule.agents
-        perc=self.model.current_state["perception"]
+        other = self.model.schedule.agents
         sellers = []
         buyers = []
         for a in other:
@@ -76,58 +35,173 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             perc_other = a.current_state["perception"]
             if a.current_state["type"] == "seller":
                 sellers.append({"agent":a,"agent_bid":perc_other["tariff"],
-                                "produce":a.current_state["perception"]["production"]})
+                                "value":a.current_state["perception"]["production"]})
             elif a.current_state["type"] == "buyer":
                 buyers.append({"agent":a,"agent_bid":perc_other["tariff"],
-                               "consume":a.current_state["perception"]["consumption"]})
-        if not sellers or all(sellers[i]["produce"] == 0 for i in range(len(sellers))):
-            pass
-        else:
-            produce_smallest = min (sellers[i]["produce"] for i in range(len(sellers)) if sellers[i]["produce"]>0)
-            # get smallest element of produce greater than 0
-            for i in range(len(sellers)):
-                sellers[i]["produce"] =round((sellers[i]["produce"]/produce_smallest),0)
-                for a in other:
-                    if sellers[i]["agent"] == a:
-                        a.current_state["perception"].update({"production":sellers[i]["produce"]})
-        if not buyers or all(buyers[i]["consume"] == 0 for i in range(len(buyers))):
-            pass
-        else:
-            consume_smallest = min (buyers[i]["consume"] for i in range(len(buyers)) if buyers[i]["consume"]>0)
-            for i in range(len(buyers)):
-                buyers[i]["consume"] = round((buyers[i]["consume"]/consume_smallest),0)
-                for a in other:
-                    if buyers[i]["agent"] == a:
-                        a.current_state["perception"].update({"consumption":buyers[i]["consume"]})
+                               "value":a.current_state["perception"]["consumption"]})
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))
         buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)
-        if len(sellers_sorted)<=len(buyers_sorted):
-            sorted_list = sellers_sorted
-            other_list = buyers_sorted
+        i=0
+        j=0
+        len_s=len(sellers_sorted)
+        len_b=len(buyers_sorted)
+        r = min(len_b,len_s)
+        while True:
+            if i<r and j<r and r>=1:
+                if sellers_sorted[i]["value"] !=0 and buyers_sorted[j]["value"]!=0:
+                    k = (sellers_sorted[i]["value"])-(buyers_sorted[j]["value"])
+                    if k==0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[i]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        x.current_state["perception"].update({"production":0})
+                        y.current_state["perception"].update({"consumption":0})
+                        sellers_sorted[i]["value"] = 0
+                        buyers_sorted[j]["value"] = 0
+                        j+=1
+                        i+=1
+                    if k>0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[i]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        y.current_state["perception"].update({"consumption":0})
+                        x.current_state["perception"].update({"production":
+                                                                  x.current_state["perception"]["production"]-
+                                                                  y.current_state["perception"]["consumption"]})
+                        sellers_sorted[i]["value"] = sellers_sorted[i]["value"]-buyers_sorted[j]["value"]
+                        buyers_sorted[j]["value"] = 0
+                        j+=1
+                        if sellers_sorted[i]["value"]<=0:
+                            i+=1
+                    if k<0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[j]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        x.current_state["perception"].update({"production":0})
+                        y.current_state["perception"].update({"consumption":
+                                                                  y.current_state["perception"]["consumption"]-
+                                                                  x.current_state["perception"]["production"]})
+                        buyers_sorted[j]["value"] = buyers_sorted[j]["value"]-sellers_sorted[i]["value"]
+                        sellers_sorted[i]["value"] = 0
+                        i+=1
+                        if buyers_sorted[j]["value"]<=0:
+                            j+=1
+                else:
+                    break
+            else:
+                break
+        return [({"agent":a,"partner":a.current_state["partner"]}) for a in self.model.schedule.agents]
+
+    def get_partner_bidsplit(self):
+        other = self.model.schedule.agents
+        sellers = []
+        buyers = []
+        for a in other:
+            a.seller_buyer()
+            perc_other = a.current_state["perception"]
+            if a.current_state["type"] == "seller":
+                sellers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                                "value":a.current_state["perception"]["production"]})
+            elif a.current_state["type"] == "buyer":
+                buyers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                               "value":a.current_state["perception"]["consumption"]})
+        if not sellers or all(sellers[i]["value"] == 0 for i in range(len(sellers))):
+            pass
         else:
-            sorted_list = buyers_sorted
-            other_list = sellers_sorted
+            for i in range(len(sellers)):
+                length = math.ceil(sellers[i]["value"])
+                x = sellers[i]["value"]
+                sellers[i]["value"] = [1 for i in range(length-1)]
+                sellers[i]["value"].append(length-x)
+        if not buyers or all(buyers[i]["value"] == 0 for i in range(len(buyers))):
+            pass
+        else:
+            for i in range(len(buyers)):
+                length = math.ceil(buyers[i]["value"])
+                x = buyers[i]["value"]
+                buyers[i]["value"] = [1 for i in range(length-1)]
+                buyers[i]["value"].append(length-x)
+        sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))
+        buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)
+        i=0
+        j=0
+        len_s=len(sellers_sorted)
+        len_b=len(buyers_sorted)
+        r = min(len_b,len_s)
+        while True:
+            if i<r and j<r and r>=1:
+                if sellers_sorted[i]["value"] !=0 and buyers_sorted[j]["value"]!=0:
+                    k = len(sellers_sorted[i]["value"])-len(buyers_sorted[j]["value"])
+                    if k==0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[i]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        x.current_state["perception"].update({"production":0})
+                        y.current_state["perception"].update({"consumption":0})
+                        sellers_sorted[i]["value"] = \
+                            [sellers_sorted[i]["value"][len(sellers_sorted[i]["value"])-1]-1]
+                        buyers_sorted[j]["value"] = \
+                            [buyers_sorted[j]["value"][len(buyers_sorted[j]["value"])-1]-1]
+                        j+=1
+                        i+=1
+                    if k>0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[i]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        y.current_state["perception"].update({"consumption":0})
+                        x.current_state["perception"].update({"production":
+                                                                  x.current_state["perception"]["production"]-
+                                                                  y.current_state["perception"]["consumption"]})
+                        s = sellers_sorted[i]["value"]
+                        s = s[len(buyers_sorted[j]["value"]):]
+                        sellers_sorted[i]["value"] = s
+                        buyers_sorted[j]["value"] = \
+                            [buyers_sorted[j]["value"][len(buyers_sorted[j]["value"])-1]-1]
+                        j+=1
+                        if len(sellers_sorted[i]["value"])==1:
+                            i+=1
+                    if k<0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[j]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        x.current_state["perception"].update({"production":0}) #TODO
+                        y.current_state["perception"].update({"consumption":
+                                                                  y.current_state["perception"]["consumption"]-
+                                                                  x.current_state["perception"]["production"]})
+                        b = buyers_sorted[j]["value"]
+                        if sellers_sorted[i]["value"]!=0:
+                            b = b[len(sellers_sorted[i]["value"]):]
+                        buyers_sorted[j]["value"] = b
+                        sellers_sorted[i]["value"] = \
+                            [sellers_sorted[i]["value"][len(sellers_sorted[i]["value"])-1]-1]
+                        i+=1
+                        if len(buyers_sorted[j]["value"])==1:
+                            j+=1
+                else:
+                    break
+            else:
+                break
+        return [({"agent":a,"partner":a.current_state["partner"]}) for a in self.model.schedule.agents]
 
-        partner_set = []
-        for i in range(len(sorted_list)):
-            x = sorted_list[i]["agent"]
-            y = other_list[i]["agent"]
-            x.current_state.update({"partner":y})
-            partner_set.append({"agent":x,"partner":y})
-        return partner_set
-
+class NegoDecisionLogicAgent(BaseDecisionLogic):
+    """
+    Returns a constant decision
+    """
     def get_decision(self,perceptions):
         if perceptions is None:
             perceptions=self.model.current_state["perception"]
 
         # base: bilateral partner selection, include below snippet only
-        a = self.model.partner_selection_orderbid()
-
-        # exp 1: bilateral bid split partner selction, include below snippet only
-        # a = self.model.partner_selection_orderbid_bidsplit()
+        # a = self.model.partner_selection_orderbid()
 
         # for exp 2 and 4: mediated partner selection, include below snippet only
-        # partner_set = self.model.partner_selection_orderbid_mediated()
+        # partner_set = self.model.model.decision_fct.get_partner()
         # a= None
         # if partner_set !=None:
         #     for i in partner_set:
@@ -138,22 +212,21 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         #             a = i["partner"]
 
         # exp 3 and 5: mediated bid split partner selection, include below snippet only
-        # partner_set = self.model.partner_selection_orderbid_bidsplit_mediated()
-        # a= None
-        # if partner_set !=None:
-        #     for i in partner_set:
-        #         selfID = self.model.current_state["agentID"]
-        #         agenti= i["agent"]
-        #         agentID = agenti.current_state["agentID"]
-        #         if agentID==selfID:
-        #             a = i["partner"]
+        partner_set = self.model.model.decision_fct.get_partner_bidsplit()
+        a= None
+        if partner_set !=None:
+            for i in partner_set:
+                selfID = self.model.current_state["agentID"]
+                agenti= i["agent"]
+                agentID = agenti.current_state["agentID"]
+                if agentID==selfID:
+                    a = i["partner"]
 
         if a!= None:
             p_p=a.current_state["perception"]
             pc_p=a.current_state
-            p = self.model.current_state["perception"]
+            p = perceptions
             pc = self.model.current_state
-
             # for exp 4, 5 with mediator discrimination, include everything below
             # if p["bias_degree"] == 0 or (p["bias_degree"]==1 and p["social_type"] == p_p["social_type"]):
 
@@ -162,6 +235,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
 
                 # for exp 2, 3 with no discrimination, include everything below, comment above
                 if pc["type"] ==  "buyer" and pc_p["type"] == "seller":
+
                     if p["consumption"] <= (p_p["production"] - p_p["consumption"]):
                         pc.update({"action": 1})  # buy
                         pc_p.update({"action": 2}) # sell

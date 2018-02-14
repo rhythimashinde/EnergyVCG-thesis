@@ -18,9 +18,8 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         Returns:
         A list of dictionaries containing the evaluation of the population behavior
         """
-
         actions = [a.current_state["action"] for a in self.model.schedule.agents]
-        N = self.model.N
+        rewards = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents]
         N_low = self.model.N
         N_high = self.model.N
         costs_low = [a.current_state["cost"] for a in self.model.schedule.agents
@@ -57,10 +56,11 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                     else:
                         production_tot = production_tot + produce
                         consumption_met = consumption_met + produce
-        return [{"social_welfare_low":social_welfare(costs_high,rewards_high,N_high),
-                 "social_welfare_high":social_welfare(costs_low,rewards_low,N_low),
+        return [{"social_welfare_high":social_welfare(costs_high,rewards_high,N_high),
+                 "social_welfare_low":social_welfare(costs_low,rewards_low,N_low),
                  "gini":gini(actions),"efficiency":efficiency_nego(consumption_met,production_tot),
-                 "market_access_low":success_nego(N_high,tot_high_agents),
-                 "wealth_distribution_low":gini(rewards_high),
-                 "wealth_distribution_high":gini(rewards_low),
-                 "market_access_high":market_access(N_low,tot_low_agents)}]
+                 "market_access_high":success_nego(N_high,tot_high_agents),
+                 "wealth_distribution":gini(rewards),
+                 "wealth_distribution_high":gini(rewards_high),
+                 "wealth_distribution_low":gini(rewards_low),
+                 "market_access_low":market_access(N_low,tot_low_agents)}]
