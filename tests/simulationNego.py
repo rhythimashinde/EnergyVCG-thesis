@@ -2,6 +2,7 @@ import functools
 import itertools
 import pandas as pd
 import numpy as np
+from numpy.random import choice
 from src.Supervisor import BaseSupervisor
 from nego.src.Decisions import NegoDecisionLogicAgent
 from nego.src.Decisions import NegoDecisionLogic
@@ -27,22 +28,27 @@ def run_experiment(test,conf):
                                  evaluation_fct=conf["eval_fct"],
                                  agent_type=NegoAgent)
             model.run(conf["T"],params=params)
-            log_tot=log_tot+model.log # concatenate lists
-    # compute statistics for all tables in log file
+            log_tot=log_tot+model.log
     varnames=[k for k,v in conf["params"].items() if len(v)>1] # keep vars for which there is more than one value
     for varname in varnames:
-        stats_rew=get_stats(log_tot,"reward",idx=[varname])
-        stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
+        # stats_rew=get_stats(log_tot,"reward",idx=[varname])
+        # stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
         stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
-        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare_high","social_welfare_low",
-                                                                      "gini","efficiency","market_access_high",
-                                                                      "wealth_distribution","market_access_low",
+        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","efficiency",
+                                                                      "wealth_distribution",
                                                                       "wealth_distribution_high",
                                                                       "wealth_distribution_low"])
-        plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
-        plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
+        stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","social_welfare_cost",
+                                                                       "social_welfare_high","social_welfare_low",
+                                                                       "market_access","market_access_high",
+                                                                       "market_access_low"])
+        stats_all = pd.concat([stats_eval,stats_eval1],axis=1)
+        stats_all.to_csv("evaluations_"+str(varname)+".csv")
+        # plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
+        # plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
+        plot_measures1(stats_eval1,varname,"./eval_1_"+str(test)+"_"+str(varname)+"_nego.png")
 
 class RewardLogicFull(NegoRewardLogic):
     def __init__(self, *args, **kwargs):
@@ -179,7 +185,7 @@ class MeasurementGenBinomial(NegoMeasurementGen):
                                 else(1 if i<len(population)*(1-self.caste)
                                      else(0 if i<len(population)*((1-self.caste)+self.caste*(1-self.biased_low))
                                           else 1))),
-              "bias_degree":(0 if i>len(population)*self.bias_mediator else 1),
+              "bias_degree":(choice((True,False),1,p=(self.bias_mediator,(1-self.bias_mediator))))[0],
               "cost":0,"timestep":timestep,"agentID":i}
              for i in range(len(population))]
         return ret
@@ -220,6 +226,7 @@ class MeasurementGenReal(NegoMeasurementGen):
                            np.random.normal(loc=self.mu1,scale=self.s1)),
                   "tariff":tariff_new,
                   "social_type":(2 if i>len(population)*self.caste else 1),
+                  "old_production":0,"old_consumption":0,
                   "production":(0 if i<len(population)*(1-self.caste)*(1-self.produce_high)
                                 else(abs(np.random.normal(production,self.s2)) if i<len(population)*(1-self.caste)
                                      else(0 if i<len(population)*((1-self.caste)+self.caste*(1-self.produce_low))
@@ -234,75 +241,62 @@ class MeasurementGenReal(NegoMeasurementGen):
             return ret
 
 if __name__ == '__main__':
-    # tests={"uniform":{"N":10,"rep":10,"params":{"mu":[5,20,50]},"meas_fct":MeasurementGenNormal}
-    # tests={"uniform":{"N":10,"rep":1,"params":{"mu":[2,5,8]},"meas_fct":MeasurementGenNormal}}
-    # tests={"binomial":{"T":5,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
-    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-    #                    "params":{"N":[20,50,100],"mu1":[1],"mu2":[5],"rich":[0.5],"bias_low":[0.2],
-    #                               "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
-    #                               "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
-    #                    "meas_fct":MeasurementGenBinomial}}
 
-    # for base, exp 1, 2, 3 implement snippet below only
-    tests1={"real":{"T":23,"reps":20,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    tests1={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],
+                       "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
+                                 "bias_high":[0.8],"low_caste":[0.36],"tariff_avg":[1],
                                  "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
-    tests2={"real":{"T":23,"reps":20,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    tests2={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-                                 "bias_high":[0.5],"low_caste":[0.2,0.36,0.8],"tariff_avg":[1],
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
+                                 "bias_high":[0.8],"low_caste":[0.2,0.36,0.8],"tariff_avg":[1],
                                  "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
-    tests3={"real":{"T":23,"reps":20,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    tests3={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
+                                 "bias_high":[0.8],"low_caste":[0.36],"tariff_avg":[1],
                                  "produce_avg":[1],"buy_low":[0.25,0.5,0.8],"buy_high":[0.48],
                                  "bias_degree":[0.5]},"meas_fct":MeasurementGenReal}}
 
-    tests4={"real":{"T":23,"reps":20,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    tests4={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
                                  "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],
                                  "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],
                                  "bias_degree":[0.5]},"meas_fct":MeasurementGenReal}}
 
-    # for exp 4, 5 implement snippet below only
-    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
-    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-    #                    "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-    #                              "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
-    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.2,0.5,0.8]},
-    #                    "meas_fct":MeasurementGenReal}}
+    tests5={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+                       "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
+                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],
+                                 "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],
+                                 "bias_degree":[0.2,0.5,0.8]},"meas_fct":MeasurementGenReal}}
 
-    # for sensitivity analysis with consumption upgrading
-    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
-    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-    #                    "params":{"N":[50],"mu1":[1.01,2.02,3.03],"mu2":[1.37],"bias_low":[0.5],
-    #                              "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
-    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
-    #                    "meas_fct":MeasurementGenReal}}
+    tests6={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+                       "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+                       "params":{"N":[50],"mu1":[1.01,2.02,3.03],"mu2":[1.37],"bias_low":[0.5],
+                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+                       "meas_fct":MeasurementGenReal}}
 
-    # for sensitivity analysis for tariff scaling
-    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
-    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-    #                    "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-    #                              "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1,2,3],"produce_avg":[1],
-    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
-    #                    "meas_fct":MeasurementGenReal}}
+    tests7={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+                       "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1,2,3],"produce_avg":[1],
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+                       "meas_fct":MeasurementGenReal}}
 
-    # for sensitivity analysis for production scaling
-    # tests={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
-    #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-    #                    "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
-    #                              "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1,2,3],
-    #                              "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
-    #                    "meas_fct":MeasurementGenReal}}
+    tests8={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+                       "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1,2,3],
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+                       "meas_fct":MeasurementGenReal}}
 
     for test,conf in tests1.items():
         run_experiment(test,conf)
@@ -314,4 +308,16 @@ if __name__ == '__main__':
         run_experiment(test,conf)
 
     for test,conf in tests4.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests5.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests6.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests7.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests8.items():
         run_experiment(test,conf)

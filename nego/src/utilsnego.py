@@ -8,12 +8,12 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 #rcParams.update({'figure.autolayout': True})
 
-def efficiency_nego(transaction_gap_ratio,tot_transactions):
+def efficiency_nego(all_efficiencies,tot_satisfied_agents):
     """
     calculates whether the demands are met exactly for the agents during transaction
     Args:
-        transaction_gap_ratio: total energy traded
-        tot_transactions: total energy available for trading with the sellers
+        all_efficiencies: efficiency of each agent's transaction
+        tot_satisfied_agents: total agents who got their demand met
 
     Returns:
         either 1 if every agent gets their demand satisfied as needed or a fraction as per the demands satisfied
@@ -21,12 +21,12 @@ def efficiency_nego(transaction_gap_ratio,tot_transactions):
     # print("total",tot_transactions)
     # print("traded",transaction_gap_ratio)
     # print("difference",tot_transactions-transaction_gap_ratio)
-    if tot_transactions != 0:
-        return (tot_transactions - transaction_gap_ratio)/tot_transactions
+    if tot_satisfied_agents != 0:
+        return sum(all_efficiencies)/tot_satisfied_agents
     else:
         return 0
 
-def success_nego(tot_agents,tot_transactions):
+def success_nego(tot_agents,tot_satisfied_agents):
     """
     calculates the ratio of number of agents who got allocated to partners
     Args:
@@ -39,7 +39,7 @@ def success_nego(tot_agents,tot_transactions):
     """
     #print("success=",(tot_transactions*2-tot_agents)/tot_agents)
     if tot_agents !=0:
-        return ((tot_agents-tot_transactions*2)/tot_agents)
+        return (tot_satisfied_agents/tot_agents)
     else:
         return 0
 
@@ -83,15 +83,21 @@ def social_welfare(costs,rewards,N):
     Returns:
         the social welfare value
     """
+    # s = np.mean(np.array(rewards))-np.mean(np.array(costs))
+    s = np.mean(np.array(rewards))
+    return s if s>0 else 0
 
-    if len(costs)>N:
-        costs = costs[(len(costs)-N):]
-    if len(rewards)>N:
-        rewards = rewards[(len(rewards)-N):]
-    assert(len(costs)==len(rewards))
-    # print ("social_welfare=",np.mean(np.array(costs)-np.array(rewards)))
+def social_welfare_costs(costs,rewards,N):
+    """
+    Computes the social welfare for the current round
+    Args:
+        costs: a list of costs, one for each agent
+        rewards: a list of rewards, one for each agent
+    Returns:
+        the social welfare value
+    """
     s = np.mean(np.array(rewards))-np.mean(np.array(costs))
-    # print (s)
+    # s = np.mean(np.array(rewards))
     return s if s>0 else 0
 
 def gini(array):
@@ -194,17 +200,25 @@ def plot_trend(df,xname,filename,trends=None):
 def plot_measures(df,xname,filename,trends=None):
     fig=plt.figure()
     for measures,ylim,i in [[["gini","efficiency"],[0,1],0],
-                            [["market_access_high","market_access_low"],[0,1.01],0],
-                            [["wealth_distribution",
-                              "wealth_distribution_high","wealth_distribution_low"],[0,0.99],0],
-                            [["social_welfare_high","social_welfare_low"],None,1]]:
+                            [["wealth_distribution","wealth_distribution_high","wealth_distribution_low"],[0,1],1]]:
         ax = fig.add_subplot(121+i)
         x=df[xname]
         ax.set_xlabel(xname)
-    #fig.suptitle(title)
-    #ax.set_ylabel(ylab or str(y))
-    # if ylim:
-    #     ax.set_ylim(ylim)
+        for y in measures:
+            ax.plot(x,df[y+"_mean"],label=y)
+            ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),
+                            np.asarray(df[y+"_mean"])+np.asarray(df[y+"_ci"]),alpha=0.2)
+        ax.legend()
+    fig.savefig(filename,format='png')
+    plt.close(fig)
+
+def plot_measures1(df,xname,filename,trends=None):
+    fig=plt.figure()
+    for measures,ylim,i in [[["market_access","market_access_high","market_access_low"],[0,1],0],
+                            [["social_welfare_cost","social_welfare","social_welfare_high","social_welfare_low"],None,1]]:
+        ax = fig.add_subplot(121+i)
+        x=df[xname]
+        ax.set_xlabel(xname)
         for y in measures:
             ax.plot(x,df[y+"_mean"],label=y)
             ax.fill_between(x,np.asarray(df[y+"_mean"])-np.asarray(df[y+"_ci"]),

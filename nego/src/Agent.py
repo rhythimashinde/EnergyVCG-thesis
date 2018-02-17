@@ -49,7 +49,6 @@ class NegoAgent(BaseAgent):
                     self.current_state["partner"] = a
         return self.current_state["partner"]
 
-
     def partner_selection_orderbid(self):
         """
 
