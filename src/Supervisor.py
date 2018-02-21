@@ -152,7 +152,9 @@ class BaseSupervisor(Model):
         # else:
             raise TypeError("Malformed perception vector")
         for a,p in zip(self.schedule.agents,perceptions):
+            a.current_state["perception"].update({"agentID":a.unique_id})
             a.perception(p)
+            # print(a.current_state["perception"])
 
     def feedback(self,decisions,perceptions=None,rewards=None):
         """
@@ -176,8 +178,10 @@ class BaseSupervisor(Model):
             rewards=self.reward_fct.get_rewards(decisions) # recompute rewards
         self.__learn(perceptions,rewards) # feedback to the own decision fct
         # give feedback to the agents
-        for a,r in zip(self.schedule.agents,rewards):
-            a.feedback(r,self.schedule.steps)
+        for a in self.schedule.agents:
+            r=[i for i in rewards if i["agentID"]==a.unique_id]
+            assert(len(r)==1)
+            a.feedback(r[0],self.schedule.steps)
         return rewards
 
 

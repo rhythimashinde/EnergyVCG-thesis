@@ -38,10 +38,10 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         # set_new =[({"agent":a,"partner":a.partner_selection_orderbid()}) for a in self.model.schedule.agents]
 
         # exp 2 and 4 with mediation
-        # set_new = self.model.decision_fct.get_partner()
+        set_new = self.model.decision_fct.get_partner()
 
         # exp 3 and 5 with bid split mediation
-        set_new = self.model.decision_fct.get_partner_bidsplit()
+        # set_new = self.model.decision_fct.get_partner_bidsplit()
 
         for i in range(self.model.N):
             x = set_new[i]["agent"]
@@ -74,8 +74,8 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                  "social_welfare_low":social_welfare(costs_low,rewards_low,N_high),
                  "gini":gini(actions),"efficiency":efficiency_nego(eff,(tot_high_agents+tot_low_agents)),
                  "market_access":success_nego(self.model.N,(tot_high_agents+tot_low_agents)),
-                 "market_access_high":success_nego(N_low,tot_high_agents),
+                 "market_access_low":success_nego(N_low,tot_high_agents),
                  "wealth_distribution":gini(rewards),
                  "wealth_distribution_high":gini(rewards_high),
                  "wealth_distribution_low":gini(rewards_low),
-                 "market_access_low":market_access(N_high,tot_low_agents)}]
+                 "market_access_high":market_access(N_high,tot_low_agents)}]

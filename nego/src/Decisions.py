@@ -1,7 +1,6 @@
 from src.DecisionLogic import BaseDecisionLogic
 import operator
 import math
-import copy
 
 class NegoDecisionLogic(BaseDecisionLogic):
     def get_decision(self,perceptions):
@@ -118,7 +117,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
             for i in range(len(sellers)):
                 length = math.ceil(sellers[i]["value"])
                 x = sellers[i]["value"]
-                sellers[i]["value"] = [1 for i in range(length-1)]
+                sellers[i]["value"] = [0.1 for i in range(10*(length-1))]
                 sellers[i]["value"].append(length-x)
         if not buyers or all(buyers[i]["value"] == 0 for i in range(len(buyers))):
             pass
@@ -126,7 +125,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
             for i in range(len(buyers)):
                 length = math.ceil(buyers[i]["value"])
                 x = buyers[i]["value"]
-                buyers[i]["value"] = [1 for i in range(length-1)]
+                buyers[i]["value"] = [0.1 for i in range(10*(length-1))]
                 buyers[i]["value"].append(length-x)
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))
         buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)
@@ -169,7 +168,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
                         s = s[len(buyers_sorted[j]["value"]):]
                         sellers_sorted[i]["value"] = s
                         buyers_sorted[j]["value"] = \
-                            [buyers_sorted[j]["value"][len(buyers_sorted[j]["value"])-1]-1]
+                            [buyers_sorted[j]["value"][len(buyers_sorted[j]["value"])-1]-0.1]
                         y.current_state["perception"].update({"old_consumption":
                                                                   y.current_state["perception"]["consumption"]})
                         y.current_state["perception"].update({"consumption":0})
@@ -195,7 +194,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
                             b = b[len(sellers_sorted[i]["value"]):]
                         buyers_sorted[j]["value"] = b
                         sellers_sorted[i]["value"] = \
-                            [sellers_sorted[i]["value"][len(sellers_sorted[i]["value"])-1]-1]
+                            [sellers_sorted[i]["value"][len(sellers_sorted[i]["value"])-1]-0.1]
                         i+=1
                         if len(buyers_sorted[j]["value"])==1:
                             j+=1
@@ -218,12 +217,12 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         # a = self.model.partner_selection_orderbid()
 
         # for exp 2 and 4:
-        # partner_set = self.model.model.decision_fct.get_partner()
-        # a = self.model.current_state["partner"]
+        partner_set = self.model.model.decision_fct.get_partner()
+        a = self.model.current_state["partner"]
 
         # for exp 3 and 5:
-        partner_set = self.model.model.decision_fct.get_partner_bidsplit()
-        a = self.model.current_state["partner"]
+        # partner_set = self.model.model.decision_fct.get_partner_bidsplit()
+        # a = self.model.current_state["partner"]
 
         if a!= None:
             p_p=a.current_state["perception"]

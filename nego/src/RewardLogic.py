@@ -15,4 +15,4 @@ class NegoRewardLogic(BaseRewardLogic):
         for i in range(len(actions)):
             rewards[i] = actions[i]*2 # seller has double rewards than buyer
         #print(actions,rewards)
-        return [{"reward":r} for r in rewards]
+        return [{"agentID":d["agentID"],"reward":r} for d,r in zip(decisions, rewards)]
