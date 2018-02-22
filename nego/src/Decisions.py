@@ -214,11 +214,11 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             perceptions=self.model.current_state["perception"]
 
         # base: bilateral partner selection
-        # a = self.model.partner_selection_orderbid()
+        a = self.model.partner_selection_orderbid()
 
         # for exp 2 and 4:
-        partner_set = self.model.model.decision_fct.get_partner()
-        a = self.model.current_state["partner"]
+        # partner_set = self.model.model.decision_fct.get_partner()
+        # a = self.model.current_state["partner"]
 
         # for exp 3 and 5:
         # partner_set = self.model.model.decision_fct.get_partner_bidsplit()
@@ -234,41 +234,44 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             # if p["biased"] == 0 or (p["biased"] == 1 and p["social_type"]==p_p["social_type"]):
 
             # for exp 4, 5 with mediator discrimination, include this snippet
-            if p["bias_degree"] == False or (p["bias_degree"]==True and p["social_type"] == p_p["social_type"]):
+            # if p["bias_degree"] == False or (p["bias_degree"]==True and p["social_type"] == p_p["social_type"]):
 
-                # for all experiments (with 2,3), include everything below
-                if pc["type"] == "buyer" and pc_p["type"] == "seller":
+            # for all experiments (with 2,3), include everything below
+            if pc["type"] == "buyer" and pc_p["type"] == "seller":
 
-                    if p["consumption"] <= (p_p["production"] - p_p["consumption"]):
-                        pc.update({"action": 1})  # buy
-                        pc_p.update({"action": 2}) # sell
-                        p_p.update({"production":p_p["production"]-p["consumption"]})
-                        p.update({"consumption": 0})
-                    else:
-                        p_p.update({"production": 0})
-                        p.update({"consumption": p["consumption"]-p_p["production"]})
-                elif pc["type"] == "seller" and pc_p["type"] == "buyer":
-                    if (p["production"]-p["consumption"]) >= p_p["consumption"]:
-                        pc.update({"action": 2})  # sell
-                        pc_p.update({"action": 1}) # buy
-                        p.update({"production": p["production"] - p_p["consumption"]})
-                        p_p.update({"consumption": 0})
-                    else:
-                        p.update({"production": 0})
-                        p_p.update({"consumption":p_p["consumption"] - p["production"]})
+                if p["consumption"] <= (p_p["production"] - p_p["consumption"]):
+                    pc.update({"action": 1})  # buy
+                    pc_p.update({"action": 2}) # sell
+                    p_p.update({"production":p_p["production"]-p["consumption"]})
+                    p.update({"consumption": 0})
+                else:
+                    p_p.update({"production": 0})
+                    p.update({"consumption": p["consumption"]-p_p["production"]})
+            elif pc["type"] == "seller" and pc_p["type"] == "buyer":
+                if (p["production"]-p["consumption"]) >= p_p["consumption"]:
+                    pc.update({"action": 2})  # sell
+                    pc_p.update({"action": 1}) # buy
+                    p.update({"production": p["production"] - p_p["consumption"]})
+                    p_p.update({"consumption": 0})
+                else:
+                    p.update({"production": 0})
+                    p_p.update({"consumption":p_p["consumption"] - p["production"]})
         return self.model.current_state["action"]
 
     def feedback(self,perceptions,reward):
         rew = self.model.current_state["reward"]
-        cost = self.model.current_state["cost"]
+        # cost = self.model.current_state["cost"]
         rew1 = self.model.current_state["perception"]
-        self.model.seller_buyer()
-        if self.model.current_state["type"]=="seller":
-            rew.update({"reward":(rew1["production"]-rew1["consumption"])*2})
-        if self.model.current_state["type"]=="buyer":
-            if rew1["production"]<=0:
-                rew.update({"reward":0})
-            else:
-                rew.update({"reward":rew1["production"]*2})
-        # rew.update({"reward":rew["reward"]-cost})
+        partner = self.model.current_state["partner"]
+        if partner!=None:
+            rew1_p = partner.current_state["perception"]
+            self.model.seller_buyer()
+            if self.model.current_state["type"]=="seller":
+                rew.update({"reward":(rew1["old_production"]-rew1_p["old_consumption"])*2})
+            # if self.model.current_state["type"]=="buyer":
+            #     if rew1["old_production"]<=0:
+            #         rew.update({"reward":0})
+            #     else:
+            #         rew.update({"reward":rew1["old_production"]*2})
+            # rew.update({"reward":rew["reward"]-cost})
         return self.model.current_state["reward"]

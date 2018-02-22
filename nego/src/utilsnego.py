@@ -91,11 +91,14 @@ def social_welfare(costs,rewards,N):
 
 def social_welfare_new(rewards):
     x = [i for i in rewards if i > 0]
-    if x:
-        s = min(i for i in rewards if i > 0)
-        return s
+    if np.count_nonzero(x)==1:
+        s=0
     else:
-        return 0
+        if x:
+            s = min(i for i in rewards if i > 0)
+        else:
+            s = 0
+    return s
 
 def social_welfare_costs(costs,rewards,N):
     """
