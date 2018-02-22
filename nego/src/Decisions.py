@@ -117,7 +117,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
             for i in range(len(sellers)):
                 length = math.ceil(sellers[i]["value"])
                 x = sellers[i]["value"]
-                sellers[i]["value"] = [0.1 for i in range(10*(length-1))]
+                sellers[i]["value"] = [1 for i in range(length-1)]
                 sellers[i]["value"].append(length-x)
         if not buyers or all(buyers[i]["value"] == 0 for i in range(len(buyers))):
             pass
@@ -125,7 +125,7 @@ class NegoDecisionLogic(BaseDecisionLogic):
             for i in range(len(buyers)):
                 length = math.ceil(buyers[i]["value"])
                 x = buyers[i]["value"]
-                buyers[i]["value"] = [0.1 for i in range(10*(length-1))]
+                buyers[i]["value"] = [1 for i in range(length-1)]
                 buyers[i]["value"].append(length-x)
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))
         buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)
@@ -264,11 +264,11 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         rew1 = self.model.current_state["perception"]
         self.model.seller_buyer()
         if self.model.current_state["type"]=="seller":
-            rew.update({"reward":(rew1["production"]-rew1["consumption"])*rew1["tariff"]})
+            rew.update({"reward":(rew1["production"]-rew1["consumption"])*2})
         if self.model.current_state["type"]=="buyer":
             if rew1["production"]<=0:
                 rew.update({"reward":0})
             else:
-                rew.update({"reward":rew1["production"]*rew1["tariff"]})
-        rew.update({"reward":rew["reward"]-cost})
+                rew.update({"reward":rew1["production"]*2})
+        # rew.update({"reward":rew["reward"]-cost})
         return self.model.current_state["reward"]

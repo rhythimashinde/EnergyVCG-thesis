@@ -38,8 +38,9 @@ def run_experiment(test,conf):
                                                                       "wealth_distribution",
                                                                       "wealth_distribution_high",
                                                                       "wealth_distribution_low"])
-        stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","social_welfare_cost",
-                                                                       "social_welfare_high","social_welfare_low",
+        stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare_new","social_welfare_cost",
+                                                                       "social_welfare_high_new",
+                                                                       "social_welfare_low_new",
                                                                        "market_access","market_access_high",
                                                                        "market_access_low"])
 
@@ -84,8 +85,8 @@ def run_experiment(test,conf):
         # plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
-        # plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
-        # plot_measures1(stats_eval1,varname,"./eval_1_"+str(test)+"_"+str(varname)+"_nego.png")
+        plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
+        plot_measures1(stats_eval1,varname,"./eval_1_"+str(test)+"_"+str(varname)+"_nego.png")
 
 class RewardLogicFull(NegoRewardLogic):
     def __init__(self, *args, **kwargs):
@@ -258,14 +259,14 @@ class MeasurementGenReal(NegoMeasurementGen):
             tariff = data[timestep]["inrpriceperkwh"+str(int(self.tariff_avg))]
             tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
             production = self.produce_avg*np.random.uniform(20000,100000)*8/24/20000
-            ret=[{"consumption":abs(np.random.normal(loc=self.mu2,scale=self.s1)
+            ret=[{"consumption":int(abs(np.random.normal(loc=self.mu2,scale=self.s1)))
                            if i>len(population)*self.caste else
-                           np.random.normal(loc=self.mu1,scale=self.s1)),
+                           int(abs(np.random.normal(loc=self.mu1,scale=self.s1))),
                   "tariff":tariff_new,
                   "social_type":(2 if i>len(population)*self.caste else 1),
                   "old_production":0,"old_consumption":0,
                   "production":(0 if i<len(population)*(1-self.caste)*(1-self.produce_high)
-                                else(abs(np.random.normal(production,self.s2)) if i<len(population)*(1-self.caste)
+                                else(int(abs(np.random.normal(production,self.s2))) if i<len(population)*(1-self.caste)
                                      else(0 if i<len(population)*((1-self.caste)+self.caste*(1-self.produce_low))
                                           else abs(np.random.normal(production,self.s2))))),
                   "biased":(0 if i<len(population)*(1-self.caste)*(1-self.biased_high)
@@ -337,29 +338,29 @@ if __name__ == '__main__':
 
     for test,conf in tests_N.items():
         run_experiment(test,conf)
+    #
+    # for test,conf in tests_bias_degree.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_bias_high.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_buy_low.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_consumption.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_low_caste.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_production.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_tariff.items():
+    #     run_experiment(test,conf)
 
-    for test,conf in tests_bias_degree.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_bias_high.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_buy_low.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_consumption.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_low_caste.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_production.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_tariff.items():
-        run_experiment(test,conf)
-
-    # tests0={"real":{"T":1,"reps":3,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
+    # tests0={"real":{"T":10,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
     #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
     #                    "params":{"N":[5,10],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
     #                              "bias_high":[0.8],"low_caste":[0.36],"tariff_avg":[1],

@@ -69,9 +69,9 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                         eff.append(old_consume/(old_consume+produce))
 
         return [{"social_welfare_cost":social_welfare_costs(costs,rewards,self.model.N),
-                 "social_welfare":social_welfare(costs,rewards,self.model.N),
-                 "social_welfare_high":social_welfare(costs_high,rewards_high,N_low),
-                 "social_welfare_low":social_welfare(costs_low,rewards_low,N_high),
+                 "social_welfare_new":social_welfare_new(rewards),
+                 "social_welfare_high_new":social_welfare_new(rewards_high),
+                 "social_welfare_low_new":social_welfare_new(rewards_low),
                  "gini":gini(actions),"efficiency":efficiency_nego(eff,(tot_high_agents+tot_low_agents)),
                  "market_access":success_nego(self.model.N,(tot_high_agents+tot_low_agents)),
                  "market_access_low":success_nego(N_low,tot_high_agents),
