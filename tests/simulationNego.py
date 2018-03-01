@@ -266,7 +266,8 @@ class MeasurementGenReal(NegoMeasurementGen):
                   "social_type":(2 if i>len(population)*self.caste else 1),
                   "old_production":0,"old_consumption":0,
                   "production":(0 if i<len(population)*(1-self.caste)*(1-self.produce_high)
-                                else(int(abs(np.random.normal(production,self.s2))) if i<len(population)*(1-self.caste)
+                                else(int(abs(np.random.normal(production,self.s2)))
+                                     if i<len(population)*(1-self.caste)
                                      else(0 if i<len(population)*((1-self.caste)+self.caste*(1-self.produce_low))
                                           else abs(np.random.normal(production,self.s2))))),
                   "biased":(0 if i<len(population)*(1-self.caste)*(1-self.biased_high)

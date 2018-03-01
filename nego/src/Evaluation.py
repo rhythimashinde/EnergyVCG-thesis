@@ -22,10 +22,6 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         costs= [a.current_state["cost"]for a in self.model.schedule.agents]
         N_low = self.model.N
         N_high = self.model.N
-        costs_low = [a.current_state["cost"] for a in self.model.schedule.agents
-                 if a.current_state["perception"]["social_type"]==1]
-        costs_high = [a.current_state["cost"] for a in self.model.schedule.agents
-                 if a.current_state["perception"]["social_type"]==2]
         rewards_low = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents
                    if a.current_state["perception"]["social_type"]==1]
         rewards_high = [a.current_state["reward"]["reward"] for a in self.model.schedule.agents

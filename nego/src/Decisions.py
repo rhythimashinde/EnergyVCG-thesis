@@ -260,7 +260,6 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
 
     def feedback(self,perceptions,reward):
         rew = self.model.current_state["reward"]
-        # cost = self.model.current_state["cost"]
         rew1 = self.model.current_state["perception"]
         partner = self.model.current_state["partner"]
         if partner!=None:
@@ -268,10 +267,4 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             self.model.seller_buyer()
             if self.model.current_state["type"]=="seller":
                 rew.update({"reward":(rew1["old_production"]-rew1_p["old_consumption"])*2})
-            # if self.model.current_state["type"]=="buyer":
-            #     if rew1["old_production"]<=0:
-            #         rew.update({"reward":0})
-            #     else:
-            #         rew.update({"reward":rew1["old_production"]*2})
-            # rew.update({"reward":rew["reward"]-cost})
         return self.model.current_state["reward"]
