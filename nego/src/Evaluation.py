@@ -31,23 +31,23 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         eff = []
 
         # base with bilateral
-        set_new =[({"agent":a,"partner":a.partner_selection_orderbid()}) for a in self.model.schedule.agents]
+        # set_new =[({"agent":a,"partner":a.partner_selection_orderbid()}) for a in self.model.schedule.agents]
 
-        # exp 2 and 4 with mediation
+        # exp 1 and 3 with mediation
         # set_new = self.model.decision_fct.get_partner()
 
-        # exp 3 and 5 with bid split mediation
-        # set_new = self.model.decision_fct.get_partner_bidsplit()
+        # exp 2 and 4 with bid split mediation
+        set_new = self.model.decision_fct.get_partner_bidsplit()
 
         for i in range(self.model.N):
             x = set_new[i]["agent"]
             if x.current_state["perception"]["social_type"]==1:
                 N_low=N_low-1
-                if set_new[i]["partner"]!=None:
+                if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
                     tot_low_agents+=1
             else:
                 N_high=N_high-1
-                if set_new[i]["partner"]!=None:
+                if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
                     tot_high_agents+=1
 
             if set_new[i]["partner"] != None:
@@ -70,8 +70,8 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                  "social_welfare_low_new":social_welfare_new(rewards_low),
                  "gini":gini(actions),"efficiency":efficiency_nego(eff,np.count_nonzero(eff)),
                  "market_access":success_nego(self.model.N,(tot_high_agents+tot_low_agents)),
-                 "market_access_low":success_nego(N_low,tot_high_agents),
+                 "market_access_high":success_nego(N_low,tot_high_agents),
                  "wealth_distribution":gini(rewards),
                  "wealth_distribution_high":gini(rewards_high),
                  "wealth_distribution_low":gini(rewards_low),
-                 "market_access_high":success_nego(N_high,tot_low_agents)}]
+                 "market_access_low":success_nego(N_high,tot_low_agents)}]

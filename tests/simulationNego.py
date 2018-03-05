@@ -34,10 +34,10 @@ def run_experiment(test,conf):
         # stats_rew=get_stats(log_tot,"reward",idx=[varname])
         # stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
         # stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
-        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","efficiency",
-                                                                      "wealth_distribution",
-                                                                      "wealth_distribution_high",
-                                                                      "wealth_distribution_low"])
+        # stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","efficiency",
+        #                                                               "wealth_distribution",
+        #                                                               "wealth_distribution_high",
+        #                                                               "wealth_distribution_low"])
         stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare_new","social_welfare_cost",
                                                                        "social_welfare_high_new",
                                                                        "social_welfare_low_new",
@@ -66,7 +66,6 @@ def run_experiment(test,conf):
         # pp.append("wealth_distribution_high")
         # qq = (pd.DataFrame([log_tot[i]["evaluation"]["wealth_distribution_low"] for i in range(150)])[0]).tolist()
         # qq.append("wealth_distribution_low")
-        #
         # with open("log_"+str(varname)+".csv",'w') as myfile:
         #     wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
         #     wr.writerow(nn)
@@ -80,12 +79,12 @@ def run_experiment(test,conf):
         #     wr.writerow(tt)
         #     wr.writerow(pp)
         #     wr.writerow(qq)
-        stats_all = pd.concat([stats_eval,stats_eval1],axis=1)
-        stats_all.to_csv("evaluations_"+str(varname)+".csv")
+        # stats_all = pd.concat([stats_eval,stats_eval1],axis=1)
+        stats_eval1.to_csv("evaluations_"+str(varname)+".csv")
         # plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
-        plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
+        # plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
         plot_measures1(stats_eval1,varname,"./eval_1_"+str(test)+"_"+str(varname)+"_nego.png")
 
 class RewardLogicFull(NegoRewardLogic):
@@ -199,7 +198,7 @@ class MeasurementGenBinomial(NegoMeasurementGen):
         self.s1=1
         self.mu2=kwargs["mu2"]
         self.s2=1
-        self.sep=kwargs["rich"]
+        # self.sep=kwargs["rich"]
         self.produce_low = kwargs["buy_low"] # proportion of agents who can produce in lower caste
         self.produce_high = kwargs["buy_high"] # proportion of agents who can produce in higher caste
         self.caste=kwargs["low_caste"] # proportion of agents in low caste
@@ -224,7 +223,8 @@ class MeasurementGenBinomial(NegoMeasurementGen):
                                      else(0 if i<len(population)*((1-self.caste)+self.caste*(1-self.biased_low))
                                           else 1))),
               "bias_degree":(choice((True,False),1,p=(self.bias_mediator,(1-self.bias_mediator))))[0],
-              "cost":0,"timestep":timestep,"agentID":i}
+              "cost":0,"timestep":timestep,"agentID":0,"type":None,
+              "old_production":0, "old_consumption":0}
              for i in range(len(population))]
         return ret
 
@@ -337,29 +337,29 @@ if __name__ == '__main__':
                                  "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
-    for test,conf in tests_N.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_bias_degree.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_bias_high.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_buy_low.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_consumption.items():
-        run_experiment(test,conf)
+    # for test,conf in tests_N.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_bias_degree.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_bias_high.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_buy_low.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_consumption.items():
+    #     run_experiment(test,conf)
 
     for test,conf in tests_low_caste.items():
         run_experiment(test,conf)
 
-    for test,conf in tests_production.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_tariff.items():
-        run_experiment(test,conf)
+    # for test,conf in tests_production.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_tariff.items():
+    #     run_experiment(test,conf)
 
     # tests0={"real":{"T":10,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
     #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
