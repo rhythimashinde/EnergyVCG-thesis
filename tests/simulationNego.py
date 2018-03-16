@@ -38,9 +38,8 @@ def run_experiment(test,conf):
         #                                                               "wealth_distribution",
         #                                                               "wealth_distribution_high",
         #                                                               "wealth_distribution_low"])
-        stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare_new","social_welfare_cost",
-                                                                       "social_welfare_high_new",
-                                                                       "social_welfare_low_new",
+        stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","social_welfare_high",
+                                                                       "social_welfare_low",
                                                                        "market_access","market_access_high",
                                                                        "market_access_low"])
 
@@ -48,12 +47,12 @@ def run_experiment(test,conf):
         # nn.append("efficiency")
         # rr = (pd.DataFrame([log_tot[i]["evaluation"]["gini"] for i in range(150)])[0]).tolist()
         # rr.append("gini")
-        # q = (pd.DataFrame([log_tot[i]["evaluation"]["market_access"] for i in range(150)])[0]).tolist()
-        # q.append("market_access")
-        # r = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_high"] for i in range(150)])[0]).tolist()
-        # r.append("market_access_high")
-        # p = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_low"] for i in range(150)])[0]).tolist()
-        # p.append("market_access_low")
+        q = (pd.DataFrame([log_tot[i]["evaluation"]["market_access"] for i in range(150)])[0]).tolist()
+        q.append("market_access")
+        r = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_high"] for i in range(150)])[0]).tolist()
+        r.append("market_access_high")
+        p = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_low"] for i in range(150)])[0]).tolist()
+        p.append("market_access_low")
         # m = (pd.DataFrame([log_tot[i]["evaluation"]["social_welfare"] for i in range(150)])[0]).tolist()
         # m.append("social_welfare")
         # n = (pd.DataFrame([log_tot[i]["evaluation"]["social_welfare_high"] for i in range(150)])[0]).tolist()
@@ -66,21 +65,22 @@ def run_experiment(test,conf):
         # pp.append("wealth_distribution_high")
         # qq = (pd.DataFrame([log_tot[i]["evaluation"]["wealth_distribution_low"] for i in range(150)])[0]).tolist()
         # qq.append("wealth_distribution_low")
-        # with open("log_"+str(varname)+".csv",'w') as myfile:
-        #     wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-        #     wr.writerow(nn)
-        #     wr.writerow(rr)
-        #     wr.writerow(q)
-        #     wr.writerow(r)
-        #     wr.writerow(p)
-        #     wr.writerow(m)
-        #     wr.writerow(n)
-        #     wr.writerow(o)
-        #     wr.writerow(tt)
-        #     wr.writerow(pp)
-        #     wr.writerow(qq)
-        # stats_all = pd.concat([stats_eval,stats_eval1],axis=1)
-        stats_eval1.to_csv("evaluations_"+str(varname)+".csv")
+        with open("log_"+str(varname)+".csv",'w') as myfile:
+            wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+            # wr.writerow(nn)
+            # wr.writerow(rr)
+            wr.writerow(q)
+            wr.writerow(r)
+            wr.writerow(p)
+            # wr.writerow(m)
+            # wr.writerow(n)
+            # wr.writerow(o)
+            # wr.writerow(tt)
+            # wr.writerow(pp)
+            # wr.writerow(qq)
+        stats_all = pd.concat([#stats_eval,
+                               stats_eval1],axis=1)
+        stats_all.to_csv("evaluations_"+str(varname)+".csv")
         # plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
@@ -228,7 +228,6 @@ class MeasurementGenBinomial(NegoMeasurementGen):
              for i in range(len(population))]
         return ret
 
-
 class MeasurementGenReal(NegoMeasurementGen):
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -244,11 +243,20 @@ class MeasurementGenReal(NegoMeasurementGen):
         self.bias_mediator = kwargs["bias_degree"] # proportion of agents being biased by the mediator
         self.tariff_avg = kwargs["tariff_avg"]
         self.produce_avg = kwargs["produce_avg"]
+        self.min_income=kwargs["min_income"]
+        self.max_income=kwargs["max_income"]
+        self.chancer=kwargs["chance_rich"]
+        self.chancerp=kwargs["chance_poor"]
 
     def get_measurements(self,population,timestep):
         """
         Returns a list of dictionaries containing the measurements: the state of each agent at the current timestep
         """
+        mi=self.min_income
+        ma=self.max_income
+        income_array = renormalize(np.arange(mi,ma,(ma-mi)/len(population)),[mi,ma],[0,1])
+        income = [abs(np.random.uniform(mi,ma)) for i in range(len(population))]
+        production = [self.produce_avg*income[i]*8/24/20000 for i in range(len(population))]
         with open('tariff.csv') as csvfile:
             has_header = csv.Sniffer().sniff(csvfile.readline())
             csvfile.seek(0)
@@ -258,7 +266,6 @@ class MeasurementGenReal(NegoMeasurementGen):
             data = [row for row in readCSV]
             tariff = data[timestep]["inrpriceperkwh"+str(int(self.tariff_avg))]
             tariff_new = abs(np.random.normal(loc=float(tariff),scale=self.s2))
-            production = self.produce_avg*np.random.uniform(20000,100000)*8/24/20000
             ret=[{"consumption":int(abs(np.random.normal(loc=self.mu2,scale=self.s1)))
                            if i>len(population)*self.caste else
                            int(abs(np.random.normal(loc=self.mu1,scale=self.s1))),
@@ -266,100 +273,122 @@ class MeasurementGenReal(NegoMeasurementGen):
                   "social_type":(2 if i>len(population)*self.caste else 1),
                   "old_production":0,"old_consumption":0,
                   "production":(0 if i<len(population)*(1-self.caste)*(1-self.produce_high)
-                                else(int(abs(np.random.normal(production,self.s2)))
-                                     if i<len(population)*(1-self.caste)
+                                else(int(production[i]) if i<len(population)*(1-self.caste)
                                      else(0 if i<len(population)*((1-self.caste)+self.caste*(1-self.produce_low))
-                                          else abs(np.random.normal(production,self.s2))))),
+                                          else (int(production[i]))))),
                   "biased":(0 if i<len(population)*(1-self.caste)*(1-self.biased_high)
                                 else(1 if i<len(population)*(1-self.caste)
                                      else(0 if i<len(population)*((1-self.caste)+self.caste*(1-self.biased_low))
                                           else 1))),
-                  "bias_degree":(0 if i>len(population)*self.bias_mediator else 1),"agentID":0,
+                  "bias_degree":(choice((True,False),1,p=(self.bias_mediator,(1-self.bias_mediator))))[0],
+                  "chance_rich":(choice((True,False),1,p=(self.chancer,(1-self.chancer))))[0],
+                  "chance_average":(choice((True,False),1,p=(self.chancerp,(1-self.chancerp))))[0],
+                  "agentID":0, "income":norma(income[i],mi,ma),
+                  "income_excess":(norma(income[i],mi,ma)-income_array[i]),
                   "main_cost":0.1,"cost":0,"timestep":timestep,"type":None}
                  for i in range(len(population))]  # high class is 2, low class is 1, main_cost is maintenance cost
             return ret
+
+def renormalize(n, range1, range2):
+    delta1 = range1[1] - range1[0]
+    delta2 = range2[1] - range2[0]
+    return (delta2 * (n - range1[0]) / delta1) + range2[0]
+
+def norma(c,min,max):
+    return (c-min)/(max-min)
 
 if __name__ == '__main__':
 
     tests_N={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
                        "params":{"N":[20,50,100],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
-                                 "bias_high":[0.8],"low_caste":[0.36],"tariff_avg":[1],
-                                 "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+                                 "bias_high":[0.8],"low_caste":[0.36],"tariff_avg":[1],"discrimination":[0.5],
+                                 "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5],
+                                 "min_income":[20000],"max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
     tests_low_caste={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
                        "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
-                                 "bias_high":[0.8],"low_caste":[0.2,0.36,0.8],"tariff_avg":[1],
-                                 "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
-                       "meas_fct":MeasurementGenReal}}
+                                 "bias_high":[0.8],"low_caste":[0.2,0.36,0.8],"tariff_avg":[1],"discrimination":[0.5],
+                                 "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5],
+                                 "min_income":[20000], "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
+                             "meas_fct":MeasurementGenReal}}
 
     tests_buy_low={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
                        "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
-                                 "bias_high":[0.8],"low_caste":[0.36],"tariff_avg":[1],
+                                 "bias_high":[0.8],"low_caste":[0.36],"tariff_avg":[1],"discrimination":[0.5],
                                  "produce_avg":[1],"buy_low":[0.25,0.5,0.8],"buy_high":[0.48],
-                                 "bias_degree":[0.5]},"meas_fct":MeasurementGenReal}}
+                                 "bias_degree":[0.5],"min_income":[20000],
+                                 "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
+                           "meas_fct":MeasurementGenReal}}
 
     tests_bias_high={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
                        "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
-                                 "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],
+                                 "bias_high":[0.2,0.5,0.8],"low_caste":[0.36],"tariff_avg":[1],"discrimination":[0.5],
                                  "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],
-                                 "bias_degree":[0.5]},"meas_fct":MeasurementGenReal}}
+                                 "bias_degree":[0.5],"min_income":[20000],
+                                 "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
+                             "meas_fct":MeasurementGenReal}}
 
     tests_bias_degree={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
                        "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
-                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],
+                                 "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"discrimination":[0.5],
                                  "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],
-                                 "bias_degree":[0.2,0.5,0.8]},"meas_fct":MeasurementGenReal}}
+                                 "bias_degree":[0.2,0.5,0.8],"min_income":[20000],
+                                 "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
+                               "meas_fct":MeasurementGenReal}}
 
     tests_consumption={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[50],"mu1":[1.01,2.02,3.03],"mu2":[1.37],"bias_low":[0.5],
+                       "params":{"N":[50],"mu1":[1.01,2.02,3.03],"mu2":[1.37],"bias_low":[0.5],"discrimination":[0.5],
                                  "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1],
-                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5],"min_income":[20000],
+                                 "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
     tests_tariff={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],"discrimination":[0.5],
                                  "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1,2,3],"produce_avg":[1],
-                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5],"min_income":[20000],
+                                 "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
     tests_production={"real":{"T":23,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
                        "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,
-                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],
+                       "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.5],"discrimination":[0.5],
                                  "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"produce_avg":[1,2,3],
-                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5]},
+                                 "buy_low":[0.25],"buy_high":[0.48],"bias_degree":[0.5],"min_income":[20000],
+                                 "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
-    # for test,conf in tests_N.items():
-    #     run_experiment(test,conf)
-    #
-    # for test,conf in tests_bias_degree.items():
-    #     run_experiment(test,conf)
-    #
-    # for test,conf in tests_bias_high.items():
-    #     run_experiment(test,conf)
-    #
-    # for test,conf in tests_buy_low.items():
-    #     run_experiment(test,conf)
-    #
-    # for test,conf in tests_consumption.items():
-    #     run_experiment(test,conf)
+    for test,conf in tests_N.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests_bias_degree.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests_bias_high.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests_buy_low.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests_consumption.items():
+        run_experiment(test,conf)
 
     for test,conf in tests_low_caste.items():
         run_experiment(test,conf)
 
-    # for test,conf in tests_production.items():
-    #     run_experiment(test,conf)
-    #
-    # for test,conf in tests_tariff.items():
-    #     run_experiment(test,conf)
+    for test,conf in tests_production.items():
+        run_experiment(test,conf)
+
+    for test,conf in tests_tariff.items():
+        run_experiment(test,conf)
 
     # tests0={"real":{"T":10,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
     #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,

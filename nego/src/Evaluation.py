@@ -34,21 +34,30 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         # set_new =[({"agent":a,"partner":a.partner_selection_orderbid()}) for a in self.model.schedule.agents]
 
         # exp 1 and 3 with mediation
-        # set_new = self.model.decision_fct.get_partner()
+        set_new = self.model.decision_fct.get_partner()
 
         # exp 2 and 4 with bid split mediation
-        set_new = self.model.decision_fct.get_partner_bidsplit()
-
+        # set_new = self.model.decision_fct.get_partner_bidsplit()
+        totl=[]
+        toth=[]
         for i in range(self.model.N):
             x = set_new[i]["agent"]
             if x.current_state["perception"]["social_type"]==1:
                 N_low=N_low-1
                 if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
+                    r=set_new[i]["agent"]
+                    totl.append(r)
                     tot_low_agents+=1
+                    if r == any(totl):
+                        tot_low_agents-=1
             else:
                 N_high=N_high-1
                 if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
+                    r=set_new[i]["agent"]
+                    toth.append(r)
                     tot_high_agents+=1
+                    if r == any(toth):
+                        tot_high_agents-=1
 
             if set_new[i]["partner"] != None:
                 x = set_new[i]["agent"]
@@ -64,10 +73,9 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                     if (produce+old_consume)!=0 and old_consume>=0:
                         eff.append(old_consume/(old_consume+produce))
 
-        return [{"social_welfare_cost":social_welfare_costs(costs,rewards,self.model.N),
-                 "social_welfare_new":social_welfare_new(rewards),
-                 "social_welfare_high_new":social_welfare_new(rewards_high),
-                 "social_welfare_low_new":social_welfare_new(rewards_low),
+        return [{"social_welfare":social_welfare_new(rewards),
+                 "social_welfare_high":social_welfare_new(rewards_high),
+                 "social_welfare_low":social_welfare_new(rewards_low),
                  "gini":gini(actions),"efficiency":efficiency_nego(eff,np.count_nonzero(eff)),
                  "market_access":success_nego(self.model.N,(tot_high_agents+tot_low_agents)),
                  "market_access_high":success_nego(N_low,tot_high_agents),

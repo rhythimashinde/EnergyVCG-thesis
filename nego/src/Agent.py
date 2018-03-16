@@ -63,21 +63,82 @@ class NegoAgent(BaseAgent):
             a.seller_buyer()
             perc_other = a.current_state["perception"]
             if a.current_state["type"] == "seller":
-                sellers.append({"agent":a,"agent_bid":perc_other["tariff"]})
+                sellers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                                "value":a.current_state["perception"]["production"]})
             elif a.current_state["type"] == "buyer":
-                buyers.append({"agent":a,"agent_bid":perc_other["tariff"]})
+                buyers.append({"agent":a,"agent_bid":perc_other["tariff"],
+                               "value":a.current_state["perception"]["consumption"]})
         sellers_sorted = sorted(sellers,key=operator.itemgetter('agent_bid'))  # ascending sorted sellers as bids
         buyers_sorted = sorted(buyers,key=operator.itemgetter('agent_bid'),reverse=True)  # descending sorted buyers as bids
-        if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
-            sorted_list = sellers_sorted
-            other_list = buyers_sorted
-        else:
-            sorted_list = buyers_sorted
-            other_list = sellers_sorted
-        for i in range(len(sorted_list)):
-            x = sorted_list[i]["agent"]
-            y = other_list[i]["agent"]
-            x.current_state.update({"partner":y})
+        i=0
+        j=0
+        len_s=len(sellers_sorted)
+        len_b=len(buyers_sorted)
+        r = min(len_b,len_s)
+        while True:
+            if i<r and j<r and r>=1:
+                if sellers_sorted[i]["value"] !=0 and buyers_sorted[j]["value"]!=0:
+                    k = (sellers_sorted[i]["value"])-(buyers_sorted[j]["value"])
+                    if k==0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[i]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        x.current_state["perception"].update({"production":0})
+                        y.current_state["perception"].update({"consumption":0})
+                        sellers_sorted[i]["value"] = 0
+                        buyers_sorted[j]["value"] = 0
+                        j+=1
+                        i+=1
+                    if k>0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[i]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        y.current_state["perception"].update({"old_consumption":
+                                                                  y.current_state["perception"]["consumption"]})
+                        x.current_state["perception"].update({"production":
+                                                                  x.current_state["perception"]["production"]-
+                                                                  y.current_state["perception"]["consumption"]})
+                        sellers_sorted[i]["value"] = sellers_sorted[i]["value"]-buyers_sorted[j]["value"]
+                        buyers_sorted[j]["value"] = 0
+                        j+=1
+                        if sellers_sorted[i]["value"]<=0:
+                            i+=1
+                    if k<0:
+                        x = sellers_sorted[i]["agent"]
+                        y = buyers_sorted[j]["agent"]
+                        x.current_state.update({"partner":y})
+                        y.current_state.update({"partner":x})
+                        x.current_state["perception"].update({"old_production":
+                                                                  x.current_state["perception"]["production"]})
+                        y.current_state["perception"].update({"consumption":
+                                                                  y.current_state["perception"]["consumption"]-
+                                                                  x.current_state["perception"]["production"]})
+                        buyers_sorted[j]["value"] = buyers_sorted[j]["value"]-sellers_sorted[i]["value"]
+                        sellers_sorted[i]["value"] = 0
+                        i+=1
+                        if buyers_sorted[j]["value"]<=0:
+                            j+=1
+                else:
+                    break
+            else:
+                break
+        # if len(sellers_sorted)<=len(buyers_sorted): # the remaining energy is wasted
+        #     sorted_list = sellers_sorted
+        #     other_list = buyers_sorted
+        # else:
+        #     sorted_list = buyers_sorted
+        #     other_list = sellers_sorted
+        # for i in range(len(sorted_list)):
+        #     x = sorted_list[i]["agent"]
+        #     y = other_list[i]["agent"]
+        #     if (x.current_state["type"]=="buyer" and x.current_state["perception"]["consumption"]<
+        #             y.current_state["perception"]["production"]-y.current_state["perception"]["consumption"]) or \
+        #             (x.current_state["type"]=="seller" and y.current_state["perception"]["consumption"]<
+        #                     x.current_state["perception"]["production"]-x.current_state["perception"]["consumption"]):
+        #         x.current_state.update({"partner":y})
+        #         y.current_state.update({"partner":x})
         return self.current_state["partner"]
 
     def transactions(self):
