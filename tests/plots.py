@@ -59,9 +59,9 @@ datadir="C:/Users/Rhytima/Dropbox/thesis_shinde/results/new_gl/discrimination_2"
 plotdir="./results_rhy"
 if not os.path.exists(plotdir):
     os.makedirs(plotdir)
-treatments=[["base","B."],
+treatments=[#["base","B."],
             #["base_dis","B. Disc."],
-            # ["exp3","M. Disc."],
+            ["exp3","M. Disc."],
             #["exp4","M. Disc. Bidsplit"],
             ["exp1","M."]
             ,["exp2","M. Bidsplit"]]
