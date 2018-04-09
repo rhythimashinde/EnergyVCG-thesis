@@ -34,27 +34,32 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         # set_new =[({"agent":a,"partner":a.partner_selection_orderbid()}) for a in self.model.schedule.agents]
 
         # exp 1 and 3 with mediation
-        # set_new = self.model.decision_fct.get_partner()
+        set_new = self.model.decision_fct.get_partner()
 
         # exp 2 and 4 with bid split mediation
-        set_new = self.model.decision_fct.get_partner_bidsplit()
+        # set_new = self.model.decision_fct.get_partner_bidsplit()
         totl=[]
         toth=[]
+        r=1
         for i in range(self.model.N):
             x = set_new[i]["agent"]
             if x.current_state["perception"]["social_type"]==1:
                 N_low=N_low-1
                 if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
-                    r=set_new[i]["agent"]
                     totl.append(r)
-                    if r != any(totl):
+                    r=set_new[i]["agent"]
+                    if r in totl:
+                        break
+                    else:
                         tot_low_agents+=1
             else:
                 N_high=N_high-1
                 if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
-                    r=set_new[i]["agent"]
                     toth.append(r)
-                    if r != any(toth):
+                    r=set_new[i]["agent"]
+                    if r in toth:
+                        break
+                    else:
                         tot_high_agents+=1
 
             if set_new[i]["partner"] != None:

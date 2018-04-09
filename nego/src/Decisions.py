@@ -218,12 +218,12 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         # a = self.model.current_state["partner"]
 
         # for exp 1 and 3:
-        # partner_set = self.model.model.decision_fct.get_partner()
-        # a = self.model.current_state["partner"]
+        partner_set = self.model.model.decision_fct.get_partner()
+        a = self.model.current_state["partner"]
 
         # for exp 2 and 4:
-        partner_set = self.model.model.decision_fct.get_partner_bidsplit()
-        a = self.model.current_state["partner"]
+        # partner_set = self.model.model.decision_fct.get_partner_bidsplit()
+        # a = self.model.current_state["partner"]
 
         if a!= None:
             p_p=a.current_state["perception"]
