@@ -34,10 +34,10 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
         # set_new =[({"agent":a,"partner":a.partner_selection_orderbid()}) for a in self.model.schedule.agents]
 
         # exp 1 and 3 with mediation
-        set_new = self.model.decision_fct.get_partner()
+        # set_new = self.model.decision_fct.get_partner()
 
         # exp 2 and 4 with bid split mediation
-        # set_new = self.model.decision_fct.get_partner_bidsplit()
+        set_new = self.model.decision_fct.get_partner_bidsplit()
         totl=[]
         toth=[]
         for i in range(self.model.N):
@@ -47,17 +47,15 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                 if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
                     r=set_new[i]["agent"]
                     totl.append(r)
-                    tot_low_agents+=1
-                    if r == any(totl):
-                        tot_low_agents-=1
+                    if r != any(totl):
+                        tot_low_agents+=1
             else:
                 N_high=N_high-1
                 if set_new[i]["partner"]!=None and x.current_state["action"]!=0:
                     r=set_new[i]["agent"]
                     toth.append(r)
-                    tot_high_agents+=1
-                    if r == any(toth):
-                        tot_high_agents-=1
+                    if r != any(toth):
+                        tot_high_agents+=1
 
             if set_new[i]["partner"] != None:
                 x = set_new[i]["agent"]
@@ -83,3 +81,4 @@ class NegoEvaluationLogic(BaseEvaluationLogic):
                  "wealth_distribution_high":gini(rewards_high),
                  "wealth_distribution_low":gini(rewards_low),
                  "market_access_low":success_nego(N_high,tot_low_agents)}]
+

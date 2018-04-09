@@ -369,26 +369,26 @@ if __name__ == '__main__':
     for test,conf in tests_N.items():
         run_experiment(test,conf)
 
-    for test,conf in tests_bias_degree.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_bias_high.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_buy_low.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_consumption.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_low_caste.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_production.items():
-        run_experiment(test,conf)
-
-    for test,conf in tests_tariff.items():
-        run_experiment(test,conf)
+    # for test,conf in tests_bias_degree.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_bias_high.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_buy_low.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_consumption.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_low_caste.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_production.items():
+    #     run_experiment(test,conf)
+    #
+    # for test,conf in tests_tariff.items():
+    #     run_experiment(test,conf)
 
     # tests0={"real":{"T":10,"reps":50,"dec_fct":NegoDecisionLogic,"dec_fct_agent":NegoDecisionLogicAgent,
     #                    "rew_fct":NegoRewardLogic, "eval_fct":NegoEvaluationLogic,

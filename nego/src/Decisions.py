@@ -218,12 +218,12 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         # a = self.model.current_state["partner"]
 
         # for exp 1 and 3:
-        partner_set = self.model.model.decision_fct.get_partner()
-        a = self.model.current_state["partner"]
+        # partner_set = self.model.model.decision_fct.get_partner()
+        # a = self.model.current_state["partner"]
 
         # for exp 2 and 4:
-        # partner_set = self.model.model.decision_fct.get_partner_bidsplit()
-        # a = self.model.current_state["partner"]
+        partner_set = self.model.model.decision_fct.get_partner_bidsplit()
+        a = self.model.current_state["partner"]
 
         if a!= None:
             p_p=a.current_state["perception"]
@@ -264,6 +264,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
                         pc_p.update({"action": 2}) # sell
                         p_p.update({"production":(p_p["production"]-p_p["consumption"])-p["consumption"]})
                         p.update({"consumption": 0})
+                        p_p.update({"consumption": 0})
                     else:
                         p_p.update({"production": 0})
                         p.update({"consumption": p["consumption"]-(p_p["production"]-p_p["consumption"])})
@@ -273,6 +274,7 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
                         pc_p.update({"action": 1}) # buy
                         p.update({"production": (p["production"]-p["consumption"]) - p_p["consumption"]})
                         p_p.update({"consumption": 0})
+                        p.update({"consumption": 0})
                     else:
                         p.update({"production": 0})
                         p_p.update({"consumption":p_p["consumption"] - (p["production"]-p["consumption"])})

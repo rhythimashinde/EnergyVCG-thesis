@@ -59,20 +59,23 @@ datadir="C:/Users/Rhytima/Dropbox/thesis_shinde/results/new_gl/discrimination_2"
 plotdir="./results_rhy"
 if not os.path.exists(plotdir):
     os.makedirs(plotdir)
-treatments=[#["base","B."],["base_dis","B. Disc."],
-            ["exp3","M. Disc."],#["exp4","M. Disc. Bidsplit"],
-            ["exp1","M."],["exp2","M. Bidsplit"]]
-varnames=[["N","number of agents"],["low_caste","proportion of agents in lower caste"]]
-measures=[["efficiency","Efficiency"],["gini","Inequality, number of sellers and buyers"],
+treatments=[["base","B."],
+            #["base_dis","B. Disc."],
+            # ["exp3","M. Disc."],
+            #["exp4","M. Disc. Bidsplit"],
+            ["exp1","M."]
+            ,["exp2","M. Bidsplit"]]
+varnames=[["N","number of agents"]]#,["low_caste","proportion of agents in lower caste"]]
+measures=[#["efficiency","Efficiency"],["gini","Inequality, number of sellers and buyers"],
           ["social_welfare","social welfare"],
           ["social_welfare_low","social welfare, low caste"],
           ["social_welfare_high","social welfare, high caste"],
           ["market_access","Market access"],
           ["market_access_low","Market access, low caste"],
-          ["wealth_distribution","Inequality of profits"],
-          ["wealth_distribution_low","Inequality of profits, low caste"],
-          ["market_access_high","Market access, high caste"],
-          ["wealth_distribution_high","Inequality of profits, high caste"]]
+          #["wealth_distribution","Inequality of profits"],
+          #["wealth_distribution_low","Inequality of profits, low caste"],
+          ["market_access_high","Market access, high caste"]]
+          #,["wealth_distribution_high","Inequality of profits, high caste"]]
 for v,vl in varnames:
     ret=[]
     for d,l in treatments:
