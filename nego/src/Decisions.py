@@ -218,12 +218,12 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
         # a = self.model.current_state["partner"]
 
         # for exp 1 and 3:
-        partner_set = self.model.model.decision_fct.get_partner()
-        a = self.model.current_state["partner"]
+        # partner_set = self.model.model.decision_fct.get_partner()
+        # a = self.model.current_state["partner"]
 
         # for exp 2 and 4:
-        # partner_set = self.model.model.decision_fct.get_partner_bidsplit()
-        # a = self.model.current_state["partner"]
+        partner_set = self.model.model.decision_fct.get_partner_bidsplit()
+        a = self.model.current_state["partner"]
 
         if a!= None:
             p_p=a.current_state["perception"]
@@ -231,24 +231,11 @@ class NegoDecisionLogicAgent(BaseDecisionLogic):
             p = perceptions
             pc = self.model.current_state
 
-            # old discrmination definition: for base with agents discrimination, include only this snippet
-            # if p["biased"] == 0 or (p["biased"] == 1 and p["social_type"]==p_p["social_type"]):
-
-            # new discrimination definition: for base with agents discrimination, include only this snippet
-            # if abs(p["production"]-p_p["production"]) > p["discrimination"]:
-
             # newest discrimination: for base with agents discrimination, include only this snippet
             # if (p["chance_rich"]==True and p_p["income_excess"]<0 and p["income"]>=0.66) \
             #         or (p["chance_average"]==True and p_p["income_excess"]<0 and
             #                     p["income"]<0.66 and p["income"]>=0.33) \
             #         or (p["income"]<0.33):
-
-            # old discrmination definition: for exp 3, 4 with mediator discrimination, include only this snippet
-            # if p["bias_degree"] == False or (p["bias_degree"]==True and p["social_type"] == p_p["social_type"]):
-
-            # new discrmination definition: for exp 3, 4 with mediator discrimination, include only this snippet
-            # if p["bias_degree"] == False or (p["bias_degree"]==True and
-            #                                          abs(p["production"]-p_p["production"]) > p["discrimination"]):
 
             # newest discrimination: for exp 3, 4 with mediator discrimination, include only this snippet
             if p["bias_degree"] == False or \

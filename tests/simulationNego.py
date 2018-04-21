@@ -34,58 +34,58 @@ def run_experiment(test,conf):
         # stats_rew=get_stats(log_tot,"reward",idx=[varname])
         # stats_perc=get_stats(log_tot,"perception",idx=[varname],cols=["production","consumption","tariff"])
         # stats_decs=get_stats(log_tot,"decisions",idx=[varname],cols=["action","cost"])
-        # stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","efficiency",
-        #                                                               "wealth_distribution",
-        #                                                               "wealth_distribution_high",
-        #                                                               "wealth_distribution_low"])
-        stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare","social_welfare_high",
-                                                                       "social_welfare_low",
-                                                                       "market_access","market_access_high",
-                                                                       "market_access_low"])
+        stats_eval=get_stats(log_tot,"evaluation",idx=[varname],cols=["gini","efficiency",
+                                                                      "wealth_distribution"])
+                                                                      #"wealth_distribution_high",
+                                                                      #"wealth_distribution_low"])
+        stats_eval1=get_stats(log_tot,"evaluation",idx=[varname],cols=["social_welfare",#"social_welfare_high",
+                                                                       #"social_welfare_low",
+                                                                       "market_access"])#,"market_access_high",
+                                                                       #"market_access_low"])
 
-        # nn = (pd.DataFrame([log_tot[i]["evaluation"]["efficiency"] for i in range(150)])[0]).tolist()
-        # nn.append("efficiency")
-        # rr = (pd.DataFrame([log_tot[i]["evaluation"]["gini"] for i in range(150)])[0]).tolist()
-        # rr.append("gini")
+        nn = (pd.DataFrame([log_tot[i]["evaluation"]["efficiency"] for i in range(150)])[0]).tolist()
+        nn.append("efficiency")
+        rr = (pd.DataFrame([log_tot[i]["evaluation"]["gini"] for i in range(150)])[0]).tolist()
+        rr.append("gini")
         q = (pd.DataFrame([log_tot[i]["evaluation"]["market_access"] for i in range(150)])[0]).tolist()
         q.append("market_access")
-        r = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_high"] for i in range(150)])[0]).tolist()
-        r.append("market_access_high")
-        p = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_low"] for i in range(150)])[0]).tolist()
-        p.append("market_access_low")
-        # m = (pd.DataFrame([log_tot[i]["evaluation"]["social_welfare"] for i in range(150)])[0]).tolist()
-        # m.append("social_welfare")
+        # r = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_high"] for i in range(150)])[0]).tolist()
+        # r.append("market_access_high")
+        # p = (pd.DataFrame([log_tot[i]["evaluation"]["market_access_low"] for i in range(150)])[0]).tolist()
+        # p.append("market_access_low")
+        m = (pd.DataFrame([log_tot[i]["evaluation"]["social_welfare"] for i in range(150)])[0]).tolist()
+        m.append("social_welfare")
         # n = (pd.DataFrame([log_tot[i]["evaluation"]["social_welfare_high"] for i in range(150)])[0]).tolist()
         # n.append("social_welfare_high")
         # o = (pd.DataFrame([log_tot[i]["evaluation"]["social_welfare_low"] for i in range(150)])[0]).tolist()
         # o.append("social_welfare_low")
-        # tt = (pd.DataFrame([log_tot[i]["evaluation"]["wealth_distribution"] for i in range(150)])[0]).tolist()
-        # tt.append("wealth_distribution")
+        tt = (pd.DataFrame([log_tot[i]["evaluation"]["wealth_distribution"] for i in range(150)])[0]).tolist()
+        tt.append("wealth_distribution")
         # pp = (pd.DataFrame([log_tot[i]["evaluation"]["wealth_distribution_high"] for i in range(150)])[0]).tolist()
         # pp.append("wealth_distribution_high")
         # qq = (pd.DataFrame([log_tot[i]["evaluation"]["wealth_distribution_low"] for i in range(150)])[0]).tolist()
         # qq.append("wealth_distribution_low")
         with open("log_"+str(varname)+".csv",'w') as myfile:
             wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-            # wr.writerow(nn)
-            # wr.writerow(rr)
+            wr.writerow(nn)
+            wr.writerow(rr)
             wr.writerow(q)
-            wr.writerow(r)
-            wr.writerow(p)
-            # wr.writerow(m)
+            # wr.writerow(r)
+            # wr.writerow(p)
+            wr.writerow(m)
             # wr.writerow(n)
             # wr.writerow(o)
-            # wr.writerow(tt)
+            wr.writerow(tt)
             # wr.writerow(pp)
             # wr.writerow(qq)
-        stats_all = pd.concat([#stats_eval,
+        stats_all = pd.concat([stats_eval,
                                stats_eval1],axis=1)
         stats_all.to_csv("evaluations_"+str(varname)+".csv")
         # plot_trend(stats_rew,varname,"./rewards_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_perc,varname,"./perceptions_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_trend(stats_decs,varname,"./decisions_"+str(test)+"_"+str(varname)+"_nego.png")
         # plot_measures(stats_eval,varname,"./eval_"+str(test)+"_"+str(varname)+"_nego.png")
-        plot_measures1(stats_eval1,varname,"./eval_1_"+str(test)+"_"+str(varname)+"_nego.png")
+        # plot_measures1(stats_eval1,varname,"./eval_1_"+str(test)+"_"+str(varname)+"_nego.png")
 
 class RewardLogicFull(NegoRewardLogic):
     def __init__(self, *args, **kwargs):
@@ -338,7 +338,7 @@ if __name__ == '__main__':
                        "params":{"N":[50],"mu1":[1.01],"mu2":[1.37],"bias_low":[0.02],
                                  "bias_high":[0.5],"low_caste":[0.36],"tariff_avg":[1],"discrimination":[0.5],
                                  "produce_avg":[1],"buy_low":[0.25],"buy_high":[0.48],
-                                 "bias_degree":[0.2,0.5,0.8],"min_income":[20000],
+                                 "bias_degree":[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9],"min_income":[20000],
                                  "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
                                "meas_fct":MeasurementGenReal}}
 
@@ -366,11 +366,11 @@ if __name__ == '__main__':
                                  "max_income":[100000],"chance_rich":[0.2],"chance_poor":[0.5]},
                        "meas_fct":MeasurementGenReal}}
 
-    for test,conf in tests_N.items():
-        run_experiment(test,conf)
-
-    # for test,conf in tests_bias_degree.items():
+    # for test,conf in tests_N.items():
     #     run_experiment(test,conf)
+
+    for test,conf in tests_bias_degree.items():
+        run_experiment(test,conf)
     #
     # for test,conf in tests_bias_high.items():
     #     run_experiment(test,conf)

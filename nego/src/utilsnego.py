@@ -213,7 +213,9 @@ def plot_trend(df,xname,filename,trends=None):
 def plot_measures(df,xname,filename,trends=None):
     fig=plt.figure()
     for measures,ylim,i in [[["gini","efficiency"],[0,1],0],
-                            [["wealth_distribution","wealth_distribution_high","wealth_distribution_low"],[0,1],1]]:
+                            [["wealth_distribution"],
+                              #"wealth_distribution_high","wealth_distribution_low"],
+                             [0,1],1]]:
         ax = fig.add_subplot(121+i)
         x=df[xname]
         ax.set_xlabel(xname)
@@ -227,8 +229,12 @@ def plot_measures(df,xname,filename,trends=None):
 
 def plot_measures1(df,xname,filename,trends=None):
     fig=plt.figure()
-    for measures,ylim,i in [[["market_access","market_access_high","market_access_low"],[0,1],0],
-                            [["social_welfare","social_welfare_high","social_welfare_low"],None,1]]:
+    for measures,ylim,i in [[["market_access"
+                              #"market_access_high","market_access_low"
+                              ],[0,1],0],
+                            [["social_welfare"
+                                 #,"social_welfare_high","social_welfare_low"
+                              ],None,1]]:
         ax = fig.add_subplot(121+i)
         x=df[xname]
         ax.set_xlabel(xname)
